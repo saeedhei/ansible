@@ -1,0 +1,36 @@
+Step 1: Install Docker
+sudo apt-get update
+sudo apt install docker-ce
+docker version
+sudo usermod -aG docker labsuser
+docker images
+
+Step 2: Write Dockerfile and create Ansible image
+FROM ubuntu:20.04
+ENV ANSIBLE_VERSION 2.9.17
+RUN apt-get update; \
+    apt-get install -y gcc python3; \
+    apt-get install -y python3-pip; \
+    apt-get clean all
+RUN pip3 install --upgrade pip; \
+    pip3 install "ansible==${ANSIBLE_VERSION}"; \
+    pip3 install ansible
+
+Step 3: Build the image using the following Docker command
+docker build -t ansible:latest .
+
+Step 4: Validate image creation by checking image list
+docker images
+or
+docker image ls
+
+Step 5: Run Ansible inside a docker container
+docker run -it ansible
+ansible --version
+
+Step 6: [Optional] Push your Ansible image to Docker Hub
+docker login
+docker push ansible:latest
+docker tag ansible sk12k/ansible
+docker image ls
+docker push sk12k/ansible

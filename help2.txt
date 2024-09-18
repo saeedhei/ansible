@@ -1,0 +1,25 @@
+docker build -t ansible-docker .
+docker run -it --name ansible-container ansible-docker /bin/bash
+
+
+
+
+docker run -it ansible-docker
+ansible --version
+apt list -a ansible
+
+
+
+
+
+
+ansible-inventory -i inventory.ini --list
+ansible control_node -m ping -i inventory.ini
+ansible myhosts -m ping -i inventory.ini
+
+ansible-playbook /app/playbooks/site.yml
+ansible-playbook -i inventory.ini /app/playbooks/site.yml
+
+for playbook in /app/playbooks/site.yml /app/playbooks/site.yml; do
+    ansible-playbook -i inventory.ini "$playbook"
+done
