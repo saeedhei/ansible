@@ -1,9 +1,4 @@
-- name: My first play
-  hosts: control_node
-  tasks:
-   - name: Ping my hosts
-     ansible.builtin.ping:
-
-   - name: Print message
-     ansible.builtin.debug:
-      msg: Hello world
+---
+- import_playbook: /app/playbooks/setup.yml
+# - import_playbook: playbooks/deploy.yml
+- import_playbook: /app/playbooks/maintenance.yml

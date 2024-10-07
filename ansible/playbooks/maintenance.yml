@@ -1,0 +1,17 @@
+---
+- name: Perform Maintenance Tasks
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update all packages to the latest version
+      apt:
+        upgrade: dist
+        update_cache: yes
+    
+    - name: Clean up old log files
+      file:
+        path: /var/log/app/old_logs/
+        state: absent
+    
+    # - name: Backup application data
+    #   command: tar czf /backup/app_backup_{{ ansible_date_time.date }}.tar.gz /var/www/app/data

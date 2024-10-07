@@ -1,0 +1,24 @@
+---
+- name: Deploy Application
+  hosts: all
+  become: yes
+  tasks:
+    - name: Clone application repository
+      git:
+        repo: 'https://github.com/example/repo.git'
+        dest: /var/www/app
+    
+    - name: Install application dependencies
+      pip:
+        requirements: /var/www/app/requirements.txt
+    
+    - name: Configure application
+      template:
+        src: templates/app_config.j2
+        dest: /etc/app/config.yml
+    
+    - name: Start application service
+      service:
+        name: app
+        state: started
+        enabled: yes
