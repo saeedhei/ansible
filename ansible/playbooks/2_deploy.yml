@@ -1,0 +1,67 @@
+---
+- name: Deploy Nginx configurations for multiple domains
+  hosts: all
+  become: yes
+  vars:
+    domains:
+      - name: gallusgarten.de
+        src: /app/server/nginx/gallusgarten.de.conf
+      - name: seointro.de
+        src: /app/server/nginx/seointro.de.conf
+
+  tasks:
+    - name: Copy Nginx configuration to sites-available
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "/etc/nginx/sites-available/{{ item.name }}.conf"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ domains }}"
+
+    - name: Create symlink to sites-enabled
+      ansible.builtin.file:
+        src: "/etc/nginx/sites-available/{{ item.name }}.conf"
+        dest: "/etc/nginx/sites-enabled/{{ item.name }}.conf"
+        state: link
+      loop: "{{ domains }}"
+
+    - name: Test Nginx configuration
+      ansible.builtin.command: nginx -t
+      register: nginx_test
+      ignore_errors: yes
+
+    - name: Fail if Nginx configuration test failed
+      ansible.builtin.fail:
+        msg: "Nginx configuration test failed: {{ nginx_test.stderr }}"
+      when: nginx_test.rc != 0
+
+    - name: Reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+
+# - name: Deploy Application
+#   hosts: all
+#   become: yes
+#   tasks:
+#     - name: Clone application repository
+#       git:
+#         repo: 'https://github.com/example/repo.git'
+#         dest: /var/www/app
+    
+#     - name: Install application dependencies
+#       pip:
+#         requirements: /var/www/app/requirements.txt
+    
+#     - name: Configure application
+#       template:
+#         src: templates/app_config.j2
+#         dest: /etc/app/config.yml
+    
+#     - name: Start application service
+#       service:
+#         name: app
+#         state: started
+#         enabled: yes

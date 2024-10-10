@@ -1,12 +1,57 @@
 ---
-- name: Setup Initial Environment
-  hosts: control_node
+- name: Install and configure Nginx
+  hosts: all
   become: yes
   tasks:
-    - name: Update apt cache
-      apt:
+    - name: Ensure Nginx is installed (Debian/Ubuntu)
+      ansible.builtin.apt:
+        name: nginx
+        state: present
         update_cache: yes
-        upgrade: dist
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Nginx is installed (RHEL/CentOS)
+      ansible.builtin.yum:
+        name: nginx
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure Nginx is started and enabled at boot
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: yes
+        
+- name: Install and configure UFW
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install UFW
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+        update_cache: yes      
+
+    - name: Allow OpenSSH
+      ansible.builtin.ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Allow Nginx Full (HTTP + HTTPS)
+      ansible.builtin.ufw:
+        rule: allow
+        name: 'Nginx Full'
+
+    - name: Allow DNS (Bind9)
+      ansible.builtin.ufw:
+        rule: allow
+        name: 'Bind9'
+
+    - name: Enable UFW
+      ansible.builtin.ufw:
+        state: enabled
+        policy: deny
+
 
     # - name: Install common utilities
     #   apt:
@@ -81,24 +126,24 @@
     #   ufw:
     #     state: enabled
 
-    - name: Install fail2ban
-      apt:
-        name: fail2ban
-        state: present
-      when: ansible_os_family == 'Debian'
-      become: true
+    # - name: Install fail2ban
+    #   apt:
+    #     name: fail2ban
+    #     state: present
+    #   when: ansible_os_family == 'Debian'
+    #   become: true
 
-    - name: Start fail2ban service
-      service:
-        name: fail2ban
-        state: started
-      become: true
+    # - name: Start fail2ban service
+    #   service:
+    #     name: fail2ban
+    #     state: started
+    #   become: true
 
-    - name: Enable fail2ban service
-      service:
-        name: fail2ban
-        enabled: true
-      become: true
+    # - name: Enable fail2ban service
+    #   service:
+    #     name: fail2ban
+    #     enabled: true
+    #   become: true
 
     # - name: Install Docker
     #   apt:

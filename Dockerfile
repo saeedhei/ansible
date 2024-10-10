@@ -23,6 +23,7 @@ WORKDIR /app
 # Add Ansible configuration, inventory, and playbooks
 # COPY ansible/ansible.cfg /app/ansible.cfg
 COPY ansible /app
+COPY server /app/server
 
 # Optionally, run the playbook (comment out if you don't want this on build)
 # RUN ansible-playbook /app/playbooks/site.yml

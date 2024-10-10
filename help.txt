@@ -34,10 +34,10 @@ ansible-inventory -i inventory.ini --list
 
 ansible my_vps -m ping -i inventory.ini
 
+ansible-playbook /app/playbooks/1_setup.yml
+ansible-playbook /app/playbooks/2_deploy.yml
 
 ansible-playbook /app/playbooks/site.yml
-ansible-playbook /app/playbooks/setup.yml
-ansible-playbook /app/playbooks/deploy.yml
 ansible-playbook /app/playbooks/maintenance.yml
 ansible-playbook -i inventory.ini /app/playbooks/site.yml
 
@@ -54,6 +54,10 @@ systemctl status nginx
 
 ansible all -m command -a "uptime"
 ansible all -m apt -a "name=nginx state=latest" --become
+
+git add .
+git commit -m "nginx updated"
+git push origin main
 
 
 
