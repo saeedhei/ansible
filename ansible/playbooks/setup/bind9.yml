@@ -1,0 +1,27 @@
+---
+- name: Ensure Bind9 is installed (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: bind9
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Ensure Bind9 is started and enabled at boot
+  ansible.builtin.service:
+    name: bind9
+    state: started
+    enabled: yes  
+
+# - name: Configure Bind9
+#   template:
+#     src: bind9.conf.j2
+#     dest: /etc/bind/named.conf
+#     mode: 0644
+#     owner: root
+#     group: bind
+
+# - name: Restart Bind9 service
+#   ansible.builtin.service:
+#     name: bind9
+#     state: restarted
+#     enabled: yes

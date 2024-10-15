@@ -4,6 +4,10 @@ docker build -t ansible-image .
 MSYS_NO_PATHCONV=1 docker run -it --rm --name ansible-container \
   ansible-image 
 
+ansible-playbook /app/playbooks/1_setup.yml
+ansible-playbook /app/playbooks/setup/docker.yml
+ansible-playbook /app/playbooks/2_deploy.yml
+
 # Inside the Container 
 eval "$(ssh-agent -s)"
 ssh-add /root/.ssh/id_rsa 

@@ -1,150 +1,23 @@
 ---
 - name: Install and configure Nginx
-  hosts: all
+  hosts: aria
   become: yes
   tasks:
-    - name: Ensure Nginx is installed (Debian/Ubuntu)
-      ansible.builtin.apt:
-        name: nginx
-        state: present
-        update_cache: yes
-      when: ansible_os_family == "Debian"
-
-    - name: Ensure Nginx is installed (RHEL/CentOS)
-      ansible.builtin.yum:
-        name: nginx
-        state: present
-      when: ansible_os_family == "RedHat"
-
-    - name: Ensure Nginx is started and enabled at boot
-      ansible.builtin.service:
-        name: nginx
-        state: started
-        enabled: yes
-        
-- name: Install and configure UFW
-  hosts: all
-  become: yes
-  tasks:
-    - name: Install UFW
-      ansible.builtin.apt:
-        name: ufw
-        state: present
-        update_cache: yes      
-
-    - name: Allow OpenSSH
-      ansible.builtin.ufw:
-        rule: allow
-        name: OpenSSH
-
-    - name: Allow Nginx Full (HTTP + HTTPS)
-      ansible.builtin.ufw:
-        rule: allow
-        name: 'Nginx Full'
-
-    - name: Allow DNS (Bind9)
-      ansible.builtin.ufw:
-        rule: allow
-        name: 'Bind9'
-
-    - name: Enable UFW
-      ansible.builtin.ufw:
-        state: enabled
-        policy: deny
-
-
-    # - name: Install common utilities
-    #   apt:
-    #     name:
-    #       - curl
-    #       - wget
-    #       - vim
-    #       - htop
-    #       - git
-    #     state: present
-
-    # - name: Add application user
-    #   user:
-    #     name: appuser
-    #     state: present
-    #     groups: sudo
-
-    # - name: Ensure iptables is installed
-    #   apt:
-    #     name: iptables
-    #     state: present
-    #     update_cache: yes
-
-    # - name: Install Nginx
-    #   apt:
-    #     name: nginx
-    #     state: latest
-
-    # - name: Start Nginx
-    #   command: nginx
-
-    # - name: Install UFW (Uncomplicated Firewall)
-    #   apt:
-    #     name: ufw
-    #     state: present
-    #   become: true
-
-    # - name: Allow SSH traffic
-    #   ufw:
-    #     rule: allow
-    #     port: 22
-    #     proto: tcp
-
-    # - name: Allow HTTP traffic (if applicable)
-    #   ufw:
-    #     rule: allow
-    #     proto: tcp
-    #     port: 80
-    #     to_port: 80
-    #   become: yes       
-
-    # - name: Allow HTTPS traffic (if applicable)
-    #   ufw:
-    #     rule: allow
-    #     proto: tcp
-    #     port: 443
-    #     to_port: 443
-    #   become: yes        
-
-    # - name: Allow Nginx Full traffic
-    #   ufw:
-    #     rule: allow
-    #     name: Nginx Full
-    #   become: yes        
-        
-    # - name: Deny all other traffic
-    #   ufw:
-    #     rule: deny
-    #   become: yes        
-
-    # - name: Enable UFW
-    #   ufw:
-    #     state: enabled
-
-    # - name: Install fail2ban
-    #   apt:
-    #     name: fail2ban
-    #     state: present
-    #   when: ansible_os_family == 'Debian'
-    #   become: true
-
-    # - name: Start fail2ban service
-    #   service:
-    #     name: fail2ban
-    #     state: started
-    #   become: true
-
-    # - name: Enable fail2ban service
-    #   service:
-    #     name: fail2ban
-    #     enabled: true
-    #   become: true
-
+  # Nginx
+    - name: Include Nginx tasks
+      include_tasks: /app/playbooks/setup/nginx.yml    
+  # Bind9
+    - name: Include Bind9 tasks
+      include_tasks: /app/playbooks/setup/bind9.yml  
+  # UFW
+    - name: Include UFW tasks
+      include_tasks: /app/playbooks/setup/ufw.yml  
+  # Fail2Ban
+    - name: Include Fail2Ban tasks
+      include_tasks: /app/playbooks/setup/fail2ban.yml
+# Docker
+-  import_playbook: /app/playbooks/setup/docker.yml             
+      
     # - name: Install Docker
     #   apt:
     #     name: docker.io

@@ -1,0 +1,19 @@
+---
+- name: Ensure Nginx is installed (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+# - name: Ensure Nginx is installed (RHEL/CentOS)
+#   ansible.builtin.yum:
+#     name: nginx
+#     state: present
+#   when: ansible_os_family == "RedHat"
+
+- name: Ensure Nginx is started and enabled at boot
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: yes

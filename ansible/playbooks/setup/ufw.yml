@@ -1,0 +1,29 @@
+---
+- name: Install UFW
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: yes      
+
+- name: Allow OpenSSH
+  ansible.builtin.ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Allow Nginx Full (HTTP + HTTPS)
+  ansible.builtin.ufw:
+    rule: allow
+    name: 'Nginx Full'
+
+- name: Allow DNS (Bind9)
+  ansible.builtin.ufw:
+    rule: allow
+    name: 'Bind9'
+
+- name: Enable UFW with default policies
+  ansible.builtin.ufw:
+    state: enabled
+    policy: deny  # Set default incoming policy to deny
+
+- name: Set default outgoing policy to allow
+  ansible.builtin.command: ufw default allow outgoing
