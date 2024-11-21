@@ -20,6 +20,12 @@
     rule: allow
     name: 'Bind9'
 
+- name: Allow Mongodb
+  ansible.builtin.ufw:   
+    rule: allow
+    port: 27017
+    proto: tcp   
+
 - name: Enable UFW with default policies
   ansible.builtin.ufw:
     state: enabled

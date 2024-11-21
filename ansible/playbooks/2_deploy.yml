@@ -1,6 +1,6 @@
 ---
 - name: Deploy Nginx configurations for multiple domains
-  hosts: all
+  hosts: vps
   become: yes
   vars:
     domains:

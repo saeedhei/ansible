@@ -1,6 +1,6 @@
 ---
 - name: Install Docker
-  hosts: aria
+  hosts: webservers
   become: yes
   tasks:
     - name: Install required packages for Debian/Ubuntu

@@ -1,0 +1,45 @@
+---
+- name: Install packages using apt (Debian-based systems)
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - curl  
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Download key
+  shell: curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc -o /tmp/mongodb-server-8.0.asc
+  args:
+    warn: false
+
+- name: Dearmor the key
+  shell: gpg --batch --yes --dearmor -o /usr/share/keyrings/mongodb-server-8.0.gpg /tmp/mongodb-server-8.0.asc
+  args:
+    warn: false
+
+- name: Remove temporary GPG key file
+  file:
+    path: /tmp/mongodb-server-8.0.asc
+    state: absent   
+
+- name: Create MongoDB APT source list file
+  ansible.builtin.shell: |
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu {{ ansible_lsb.codename }}/mongodb-org/8.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+
+- name: Reload the APT package database
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install MongoDB
+  apt:
+    name: mongodb-org
+    state: present
+    update_cache: yes
+
+- name: Ensure MongoDB is running and enabled on boot
+  ansible.builtin.service:
+    name: mongod
+    enabled: yes
+    state: started
+
+
