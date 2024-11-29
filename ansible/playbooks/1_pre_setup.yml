@@ -1,0 +1,56 @@
+---
+- name: Install and configure New Server
+  hosts: newvps
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Ensure the system is Debian-based
+      debug:
+        msg: "This host is {{ ansible_facts['distribution'] }}"
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Update package lists
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600  # Cache is valid for 1 hour
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Create or update a sudo user
+      user:
+        name: "{{ new_username }}"
+        password: "{{ vault_user_password | password_hash('sha512') }}"
+        shell: /bin/bash
+        groups: sudo
+        append: true
+        create_home: true
+        state: present
+    
+    - name: Ensure passwordless sudo for sudo group (optional)
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Set authorized key for remote user
+      ansible.posix.authorized_key:
+        user: "{{ new_username }}"
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+    - name: Disable password authentication for root
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin prohibit-password'
+      notify: Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: ssh
+        state: restarted              
+    

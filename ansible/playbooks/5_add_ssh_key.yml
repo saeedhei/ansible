@@ -1,9 +1,0 @@
----
-- name: Append SSH public key to authorized_keys
-  hosts: my_vps
-  tasks:
-    - name: Ensure SSH key is present in authorized_keys
-      authorized_key:
-        user: root  # Change this if you're using a different user
-        state: present
-        key: "{{ lookup('file', '/path/to/your/id_rsa.pub') }}"

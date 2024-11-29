@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     software-properties-common \
-    bash   
+    bash \
+    nano 
 
 # Add Ansible PPA
 RUN apt-add-repository ppa:ansible/ansible
@@ -23,7 +24,9 @@ WORKDIR /app
 # Add Ansible configuration, inventory, and playbooks
 # COPY ansible/ansible.cfg /app/ansible.cfg
 COPY ansible /app
-COPY server /app/server
+
+# [WARNING]: Ansible is being run in a world writable directory (/app)
+# RUN chmod 755 /app
 
 # Optionally, run the playbook (comment out if you don't want this on build)
 # RUN ansible-playbook /app/playbooks/site.yml
@@ -34,17 +37,20 @@ RUN apt-get clean && \
 
 
 # Copy the entry point script into the image
-COPY sh/start-ssh-agent.sh /usr/local/bin/start-ssh-agent.sh
+COPY ansible/server/sh/start-ssh-agent.sh /usr/local/bin/start-ssh-agent.sh
 # Make the script executable
 RUN chmod +x /usr/local/bin/start-ssh-agent.sh
 # Set the entry point to the script
 ENTRYPOINT ["/usr/local/bin/start-ssh-agent.sh"]
 
 # Add your local SSH keys   
-COPY ssh /root/.ssh
+COPY ansible/server/ssh /root/.ssh
 
 # Set correct permissions for the SSH private key
 RUN chmod 600 /root/.ssh/id_rsa
+
+# Set nano as the default editor
+ENV EDITOR=nano
 
 # Set /bin/bash as the default shell
 CMD ["/bin/bash"]

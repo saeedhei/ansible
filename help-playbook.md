@@ -1,15 +1,27 @@
+# Build Image
 docker build -t ansible-image .
 
 # git Terminal
-docker ps -q -f name=ansible-container && docker stop ansible-container; MSYS_NO_PATHCONV=1 docker run -it --rm --name ansible-container ansible-image
+docker ps -q -f name=ansible-container && docker stop ansible-container; \
+MSYS_NO_PATHCONV=1 docker run -it --rm \
+--name ansible-container \
+-v $(pwd)/ansible:/app \
+ansible-image
 
+# run playbook pre setup
+ansible-playbook -i inventory.ini /app/playbooks/1_pre_setup.yml \
+  --extra-vars "@/app/secrets/secrets.yml" \
+  --ask-vault-pass
 
+# run playbook setup
+ansible-playbook -i inventory.ini /app/playbooks/2_setup.yml \
+  --extra-vars "@/app/secrets/secrets.yml" \
+  --ask-vault-pass
 
-MSYS_NO_PATHCONV=1 docker run -it --rm --name ansible-container \
-  ansible-image 
-
-ansible-playbook /app/playbooks/1_setup.yml
-ansible-playbook /app/playbooks/2_deploy.yml
+# run playbook deploy
+ansible-playbook -i inventory.ini /app/playbooks/2_deploy.yml \
+  --extra-vars "@/app/secrets/secrets.yml" \
+  --ask-vault-pass
 
 ansible-playbook /app/playbooks/setup/mongodb.yml
 ansible-playbook /app/playbooks/setup/docker.yml
@@ -31,13 +43,6 @@ docker run -it --rm --name ansible-container \
 docker inspect ansible-container     outside
 ls -l /run/ssh-agent.sock            inside
 
-
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_rsa
-echo $SSH_AUTH_SOCK    
-
-
-
 docker run -it ansible-docker
 ansible --version
 apt list -a ansible
@@ -46,12 +51,6 @@ apt list -a ansible
 ansible-inventory -i inventory.ini --list
 
 ansible my_vps -m ping -i inventory.ini
-
-ansible-playbook /app/playbooks/1_setup.yml
-ansible-playbook /app/playbooks/2_deploy.yml
-
-ansible-playbook /app/playbooks/site.yml
-ansible-playbook /app/playbooks/maintenance.yml
 ansible-playbook -i inventory.ini /app/playbooks/site.yml
 
 for playbook in /app/playbooks/site.yml /app/playbooks/basic.yml; do
@@ -69,7 +68,7 @@ ansible all -m command -a "uptime"
 ansible all -m apt -a "name=nginx state=latest" --become
 
 git add .
-git commit -m "docker updated"
+git commit -m "pre setup updated"
 git push origin main
 
 
