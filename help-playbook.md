@@ -8,18 +8,18 @@ MSYS_NO_PATHCONV=1 docker run -it --rm \
 -v $(pwd)/ansible:/app \
 ansible-image
 
-# run playbook pre setup
-ansible-playbook -i inventory.ini /app/playbooks/1_pre_setup.yml \
-  --extra-vars "@/app/secrets/secrets.yml" \
-  --ask-vault-pass
+
 
 # run playbook setup
-ansible-playbook -i inventory.ini /app/playbooks/2_setup.yml \
-  --extra-vars "@/app/secrets/secrets.yml" \
-  --ask-vault-pass
+ansible-playbook -i inventory.yml /app/playbooks/2_setup.yml 
 
 # run playbook deploy
 ansible-playbook -i inventory.ini /app/playbooks/2_deploy.yml \
+  --extra-vars "@/app/secrets/secrets.yml" \
+  --ask-vault-pass
+
+# run playbook pre setup
+ansible-playbook -i inventory.yml /app/playbooks/1_pre_setup.yml \
   --extra-vars "@/app/secrets/secrets.yml" \
   --ask-vault-pass
 

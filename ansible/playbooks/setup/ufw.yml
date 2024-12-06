@@ -26,6 +26,29 @@
     port: 27017
     proto: tcp   
 
+- name: Allow CouchDB client access ports
+  ansible.builtin.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  with_items: "{{ couchdb_ports }}"
+
+- name: Allow CouchDB inter-node communication ports
+  ansible.builtin.ufw:
+    rule: allow
+    proto: tcp
+    port: "{{ couchdb_dynamic_ports }}"
+    from_ip: "{{ item }}"
+  with_items: "{{ couchdb_cluster_ips }}"
+
+- name: Allow Erlang epmd port for clustering
+  ansible.builtin.ufw:
+    rule: allow
+    proto: tcp
+    port: 4369
+    from_ip: "{{ item }}"
+  with_items: "{{ couchdb_cluster_ips }}"    
+
 - name: Enable UFW with default policies
   ansible.builtin.ufw:
     state: enabled
@@ -33,3 +56,11 @@
 
 - name: Set default outgoing policy to allow
   ansible.builtin.command: ufw default allow outgoing
+
+# - name: Show UFW status
+#   command: ufw status verbose
+#   register: ufw_status
+
+# - name: Print UFW status
+#   debug:
+#     msg: "{{ ufw_status.stdout }}"  

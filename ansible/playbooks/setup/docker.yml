@@ -1,6 +1,6 @@
 ---
 - name: Install Docker
-  hosts: webservers
+  hosts: db_servers
   become: yes
   tasks:
     - name: Install required packages for Debian/Ubuntu
