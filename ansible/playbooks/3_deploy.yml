@@ -1,6 +1,6 @@
 ---
 - name: Deploy Nginx configurations for multiple domains
-  hosts: vps
+  hosts: master_server
   become: yes
   vars:
     domains:
@@ -8,6 +8,10 @@
         src: /app/server/nginx/gallusgarten.de.conf
       - name: seointro.de
         src: /app/server/nginx/seointro.de.conf
+      - name: db1.seointro.de
+        src: /app/server/nginx/db1.seointro.de.conf
+      - name: db2.seointro.de
+        src: /app/server/nginx/db2.seointro.de.conf                
 
   tasks:
     - name: Copy Nginx configuration to sites-available

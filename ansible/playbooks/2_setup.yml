@@ -4,17 +4,17 @@
   become: yes
   tasks:
     # Nginx
-    - name: Include Nginx tasks
-      include_tasks: /app/playbooks/setup/nginx.yml    
-    # Bind9
-    - name: Include Bind9 tasks
-      include_tasks: /app/playbooks/setup/bind9.yml  
-    # UFW
-    - name: Include UFW tasks
-      include_tasks: /app/playbooks/setup/ufw.yml  
-    # Fail2Ban
-    - name: Include Fail2Ban tasks
-      include_tasks: /app/playbooks/setup/fail2ban.yml
+    # - name: Include Nginx tasks
+    #   include_tasks: /app/playbooks/setup/nginx.yml    
+    # # Bind9
+    # - name: Include Bind9 tasks
+    #   include_tasks: /app/playbooks/setup/bind9.yml  
+    # # UFW
+    # - name: Include UFW tasks
+    #   include_tasks: /app/playbooks/setup/ufw.yml  
+    # # Fail2Ban
+    # - name: Include Fail2Ban tasks
+    #   include_tasks: /app/playbooks/setup/fail2ban.yml
 # Docker
 -  import_playbook: /app/playbooks/setup/docker.yml      
 

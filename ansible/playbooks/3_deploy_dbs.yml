@@ -1,0 +1,87 @@
+---
+- name: Deploy CouchDB on db servers
+  hosts: db_servers
+  become: true
+  vars:
+    couchdb_admin_user: admin
+    couchdb_admin_password: "password"
+  tasks:
+    - name: Create CouchDB data directories
+      file:
+        path: "/docker-projects/docker-couchdb/data"
+        state: directory
+        mode: '0755'
+
+    - name: Create CouchDB Docker Compose file
+      copy:
+        dest: "/docker-projects/docker-couchdb/docker-compose.yml"
+        content: |
+          version: '3.9'
+          services:
+            couchdb:
+              image: couchdb:3.4.2
+              container_name: couchdb
+              ports:
+                - "5984:5984"
+                - "5986:5986"
+                - "4369:4369"
+                - "{{ couchdb_dynamic_ports }}"
+              volumes:
+                - /docker-projects/docker-couchdb/data:/opt/couchdb/data
+              environment:
+                - COUCHDB_USER={{ couchdb_admin_user }}
+                - COUCHDB_PASSWORD={{ couchdb_admin_password }}
+                - NODENAME={{ inventory_hostname }}
+                - ERL_FLAGS="-name couchdb@{{ ansible_host }}"
+              networks:
+                couchdb_cluster:
+                  aliases:
+                    - couchdb@{{ ansible_host }}
+          networks:
+            couchdb_cluster:
+              driver: bridge
+
+    - name: Start CouchDB container
+      shell: |
+        docker-compose -f /docker-projects/docker-couchdb/docker-compose.yml up -d
+
+    - name: Wait for CouchDB to be ready
+      uri:
+        url: "http://{{ ansible_host }}:5984/"
+        status_code: 200
+        timeout: 30
+      register: couchdb_check
+      retries: 5
+      delay: 5
+      until: couchdb_check is succeeded
+
+    - name: Configure CouchDB clustering
+      when: ansible_host == couchdb_cluster_ips[0]
+      shell: |
+        curl -X PUT http://{{ couchdb_admin_user }}:{{ couchdb_admin_password }}@localhost:5984/_node/_local/_config/chttpd/require_valid_user -d '"true"'
+        for node_ip in {{ couchdb_cluster_ips }}; do
+          curl -X POST http://{{ couchdb_admin_user }}:{{ couchdb_admin_password }}@localhost:5984/_cluster_setup \
+            -H "Content-Type: application/json" \
+            -d '{"action":"enable_cluster","bind_address":"0.0.0.0","username":"{{ couchdb_admin_user }}","password":"{{ couchdb_admin_password }}","node_count":2,"remote_node":"'"$node_ip"'","remote_current_user":"{{ couchdb_admin_user }}","remote_current_password":"{{ couchdb_admin_password }}"}';
+        done
+      args:
+        executable: /bin/bash
+
+
+# /docker-projects
+# ├── project1
+# │   ├── docker-compose.yml
+# │   ├── .env
+# │   ├── data/               # Persistent data (if needed)
+# │   ├── logs/               # Log files (if needed)
+# │   ├── src/                # Source code (optional)
+# │   ├── Dockerfile          # Optional Dockerfile for custom images
+# │   └── README.md           # Optional documentation for the project
+# ├── project2
+# │   ├── docker-compose.yml
+# │   ├── .env
+# │   ├── data/
+# │   ├── logs/
+# │   ├── src/
+# │   └── README.md
+# └── shared/                 # Shared resources across projects (e.g., networks, volumes)

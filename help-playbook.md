@@ -18,6 +18,12 @@ ansible-playbook -i inventory.ini /app/playbooks/2_deploy.yml \
   --extra-vars "@/app/secrets/secrets.yml" \
   --ask-vault-pass
 
+# run playbook deploy_DBS
+ansible-playbook -i inventory.yml /app/playbooks/3_deploy_dbs.yml 
+
+# run playbook deploy
+ansible-playbook -i inventory.yml /app/playbooks/3_deploy.yml 
+
 # run playbook pre setup
 ansible-playbook -i inventory.yml /app/playbooks/1_pre_setup.yml \
   --extra-vars "@/app/secrets/secrets.yml" \
@@ -68,7 +74,7 @@ ansible all -m command -a "uptime"
 ansible all -m apt -a "name=nginx state=latest" --become
 
 git add .
-git commit -m "pre setup updated"
+git commit -m "dbs setup updated"
 git push origin main
 
 
