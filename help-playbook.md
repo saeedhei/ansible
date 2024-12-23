@@ -1,15 +1,3 @@
-# Build Image
-docker build -t ansible-image .
-
-# git Terminal
-docker ps -q -f name=ansible-container && docker stop ansible-container; \
-MSYS_NO_PATHCONV=1 docker run -it --rm \
---name ansible-container \
--v $(pwd)/ansible:/app \
-ansible-image
-
-
-
 # run playbook setup
 ansible-playbook -i inventory.yml /app/playbooks/2_setup.yml 
 
