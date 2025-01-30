@@ -186,6 +186,7 @@ curl -X PUT http://admin:password@89.117.54.249:5984/_node/_local/_config/chttpd
 curl -X DELETE http://admin:password@89.117.54.249:5984/_session
 
 curl -X GET http://admin:password@89.117.54.249:5984/_all_dbs
+curl -X GET http://admin:password@localhost:5984/_all_dbs
 curl -X GET http://admin:password@89.117.54.249:5984/saeed
 
 
@@ -194,3 +195,8 @@ curl -X GET http://admin:password@89.117.54.249:5984/saeed
 curl -X POST http://admin:password@89.117.54.249:5984/_cluster_setup \
      -H "Content-Type: application/json" \
      -d '{"action":"finish_cluster"}'
+
+
+
+
+

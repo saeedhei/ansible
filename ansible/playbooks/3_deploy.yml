@@ -8,10 +8,8 @@
         src: /app/server/nginx/gallusgarten.de.conf
       - name: seointro.de
         src: /app/server/nginx/seointro.de.conf
-      - name: db1.seointro.de
-        src: /app/server/nginx/db1.seointro.de.conf
-      - name: db2.seointro.de
-        src: /app/server/nginx/db2.seointro.de.conf                
+      - name: couchdb.seointro.de
+        src: /app/server/nginx/couchdb.seointro.de.conf            
 
   tasks:
     - name: Copy Nginx configuration to sites-available

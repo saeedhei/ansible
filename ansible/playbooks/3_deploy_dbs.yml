@@ -32,6 +32,7 @@
             couchdb-node0:
               image: couchdb:3.4.2
               container_name: couchdb0
+              restart: always
               ports:
                 - "5984:5984"
                 - "5986:5986"
@@ -88,6 +89,7 @@
             couchdb-node1:
               image: couchdb:3.4.2
               container_name: couchdb1
+              restart: always
               ports:
                 - "5984:5984"
                 - "5986:5986"
