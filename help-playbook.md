@@ -9,11 +9,14 @@ ansible-playbook -i inventory.ini /app/playbooks/2_deploy.yml \
 # run playbook deploy_DBS
 ansible-playbook -i inventory.yml /app/playbooks/3_deploy_dbs.yml 
 
-# run playbook deploy
+# 3 run playbook deploy
 ansible-playbook -i inventory.yml /app/playbooks/3_deploy.yml 
 
-# run playbook ssl
+# 4 run playbook ssl
 ansible-playbook -i inventory.yml /app/playbooks/4_ssl.yml 
+
+# 5 run playbook run node apps
+ansible-playbook -i inventory.yml /app/playbooks/5_run_node_apps.yml
 
 # run playbook pre setup
 ansible-playbook -i inventory.yml /app/playbooks/1_pre_setup.yml \

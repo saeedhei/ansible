@@ -1,3 +1,3 @@
 git add .
-git commit -m "dbs setup updated"
+git commit -m "nginx setup updated"
 git push origin main

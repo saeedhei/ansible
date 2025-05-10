@@ -1,5 +1,5 @@
 ---
-- name: Deploy Nginx configurations for multiple domains
+- name: Deploy SSL
   hosts: master_server
   become: yes
   vars:

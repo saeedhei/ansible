@@ -1,0 +1,69 @@
+---
+- name: Deploy Node Apps
+  hosts: master_server
+  become: yes
+  vars:
+    domains:
+      - name: gallusgarten.de
+        src: /app/server/nginx/gallusgarten.de.conf
+      - name: api.gallusgarten.de
+        src: /app/server/nginx/api.gallusgarten.de.conf        
+      - name: seointro.de
+        src: /app/server/nginx/seointro.de.conf
+      - name: couchdb.seointro.de
+        src: /app/server/nginx/couchdb.seointro.de.conf   
+      - name: almasaralabyad.com
+        src: /app/server/nginx/almasaralabyad.com.conf                   
+
+  tasks: 
+    - name: Remove old Node.js (if installed via apt)
+      apt:
+        name: nodejs
+        state: absent
+      ignore_errors: yes
+
+    - name: Add NodeSource Node.js 20.x repo
+      shell: curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+      args:
+        executable: /bin/bash
+
+    - name: Install Node.js 20.x
+      apt:
+        name: nodejs
+        state: present
+        update_cache: yes
+
+    - name: Check Node.js version
+      command: node -v
+      register: node_version
+
+    - name: Debug Node version
+      debug:
+        msg: "Node version is {{ node_version.stdout }}"
+# node apps
+    - name: Install PM2 globally
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Run npm install
+      command: npm install
+      args:
+        chdir: /home/araz/p/almasaralabyad.com
+
+    - name: Run npm build
+      command: npm run build
+      args:
+        chdir: /home/araz/p/almasaralabyad.com
+
+    - name: Start app with PM2
+      command: pm2 start npm --name "almasaralabyad" -- start
+      args:
+        chdir: /home/araz/p/almasaralabyad.com
+
+    - name: Save PM2 process list
+      command: pm2 save
+
+    - name: Enable PM2 startup on boot
+      command: pm2 startup systemd
+
