@@ -13,6 +13,19 @@ curl -X PUT http://admin:password@127.0.0.1:5984/_users/org.couchdb.user:john \
     "type": "user"
   }'
 
+# Add a User with varaiable
+USER_NAME="xxx"
+USER_PASSWORD="xxx"
+
+curl -X PUT "http://admin:password@89.117.54.249:5984/_users/org.couchdb.user:$USER_NAME" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "'"$USER_NAME"'",
+    "password": "'"$USER_PASSWORD"'",
+    "roles": ["developers"],
+    "type": "user"
+  }'
+
 
 curl -X GET http://a:%23@89.117.54.249:5984/testdb
 
@@ -26,3 +39,17 @@ curl -X GET http://admin:password@89.117.54.249:5984/gallusgarten
 
 
 curl -X GET https://admin:password@couchdb.seointro.de/gallusgarten
+
+
+
+USER_NAME="xxx"
+USER_PASSWORD="xxx"
+
+curl -X PUT "http://admin:password@89.117.54.249:5984/_users/org.couchdb.user:$USER_NAME" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "'"$USER_NAME"'",
+    "password": "'"$USER_PASSWORD"'",
+    "roles": ["developers"],
+    "type": "user"
+  }'

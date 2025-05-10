@@ -1,0 +1,56 @@
+---
+- name: Deploy Nginx configurations for multiple domains
+  hosts: master_server
+  become: yes
+  vars:
+    domains:
+      - name: gallusgarten.de
+        src: /app/server/nginx/gallusgarten.de.conf
+      - name: api.gallusgarten.de
+        src: /app/server/nginx/api.gallusgarten.de.conf        
+      - name: seointro.de
+        src: /app/server/nginx/seointro.de.conf
+      - name: couchdb.seointro.de
+        src: /app/server/nginx/couchdb.seointro.de.conf   
+      - name: almasaralabyad.com
+        src: /app/server/nginx/almasaralabyad.com.conf                   
+
+  tasks:
+    - name: Remove duplicate CouchDB APT sources
+      file:
+        path: /etc/apt/sources.list.d/apache_jfrog_io_artifactory_couchdb_deb.list
+        state: absent
+
+    - name: Accept the new label from the ondrej/php PPA (force update)
+      shell: |
+        apt-get update --allow-releaseinfo-change
+      args:
+        warn: false
+
+    - name: Install Certbot and NGINX plugin
+      apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+        update_cache: yes
+
+    - name: Obtain SSL certificate via Certbot
+      command: >
+        certbot --nginx -n --agree-tos --redirect
+        -m saeedhei@gmail.com
+        -d almasaralabyad.com -d www.almasaralabyad.com
+      args:
+        creates: /etc/letsencrypt/live/almasaralabyad.com/fullchain.pem
+
+    - name: Check certbot.timer status
+      command: systemctl status certbot.timer
+      register: certbot_timer_status
+      ignore_errors: yes
+
+    - name: Show certbot.timer status
+      debug:
+        var: certbot_timer_status.stdout_lines
+
+    - name: Perform dry-run renewal test
+      command: certbot renew --dry-run

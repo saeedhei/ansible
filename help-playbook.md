@@ -12,6 +12,9 @@ ansible-playbook -i inventory.yml /app/playbooks/3_deploy_dbs.yml
 # run playbook deploy
 ansible-playbook -i inventory.yml /app/playbooks/3_deploy.yml 
 
+# run playbook ssl
+ansible-playbook -i inventory.yml /app/playbooks/4_ssl.yml 
+
 # run playbook pre setup
 ansible-playbook -i inventory.yml /app/playbooks/1_pre_setup.yml \
   --extra-vars "@/app/secrets/secrets.yml" \

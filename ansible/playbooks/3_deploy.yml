@@ -6,10 +6,14 @@
     domains:
       - name: gallusgarten.de
         src: /app/server/nginx/gallusgarten.de.conf
+      - name: api.gallusgarten.de
+        src: /app/server/nginx/api.gallusgarten.de.conf        
       - name: seointro.de
         src: /app/server/nginx/seointro.de.conf
       - name: couchdb.seointro.de
-        src: /app/server/nginx/couchdb.seointro.de.conf            
+        src: /app/server/nginx/couchdb.seointro.de.conf   
+      - name: almasaralabyad.com
+        src: /app/server/nginx/almasaralabyad.com.conf                   
 
   tasks:
     - name: Copy Nginx configuration to sites-available
@@ -42,6 +46,7 @@
       ansible.builtin.service:
         name: nginx
         state: reloaded
+
 
 
 # - name: Deploy Application
