@@ -16,22 +16,22 @@
         src: /app/server/nginx/almasaralabyad.com.conf                   
 
   tasks: 
-    - name: Remove old Node.js (if installed via apt)
-      apt:
-        name: nodejs
-        state: absent
-      ignore_errors: yes
+    # - name: Remove old Node.js (if installed via apt)
+    #   apt:
+    #     name: nodejs
+    #     state: absent
+    #   ignore_errors: yes
 
-    - name: Add NodeSource Node.js 20.x repo
-      shell: curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-      args:
-        executable: /bin/bash
+    # - name: Add NodeSource Node.js 20.x repo
+    #   shell: curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    #   args:
+    #     executable: /bin/bash
 
-    - name: Install Node.js 20.x
-      apt:
-        name: nodejs
-        state: present
-        update_cache: yes
+    # - name: Install Node.js 20.x
+    #   apt:
+    #     name: nodejs
+    #     state: present
+    #     update_cache: yes
 
     - name: Check Node.js version
       command: node -v
@@ -56,10 +56,21 @@
       args:
         chdir: /home/araz/p/almasaralabyad.com
 
-    - name: Start app with PM2
+    - name: Get PM2 process list as JSON
+      command: pm2 jlist
+      register: pm2_list
+      failed_when: false
+      changed_when: false
+
+    - name: Start app with PM2 if not running
       command: pm2 start npm --name "almasaralabyad" -- start
       args:
         chdir: /home/araz/p/almasaralabyad.com
+      when: pm2_list.stdout | from_json | selectattr('name', 'equalto', 'almasaralabyad') | list | length == 0
+
+    - name: Restart app with PM2 if already running
+      command: pm2 restart almasaralabyad
+      when: pm2_list.stdout | from_json | selectattr('name', 'equalto', 'almasaralabyad') | list | length > 0
 
     - name: Save PM2 process list
       command: pm2 save
