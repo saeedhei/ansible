@@ -47,7 +47,7 @@ ENTRYPOINT ["/usr/local/bin/start-ssh-agent.sh"]
 COPY ansible/server/ssh /root/.ssh
 
 # Set correct permissions for the SSH private key
-RUN chmod 600 /root/.ssh/id_rsa
+RUN chmod 600 /root/.ssh/id_ed25519
 
 # Set nano as the default editor
 ENV EDITOR=nano

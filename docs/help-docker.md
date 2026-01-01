@@ -19,6 +19,18 @@ docker run -it --rm --name ansible-container \
     ansible-image
 
 
+docker ps -q -f name=ansible-container && docker stop ansible-container; \
+MSYS_NO_PATHCONV=1 docker run -it --rm \
+--name ansible-container \
+-v $(pwd)/ansible/playbooks:/app/playbooks:ro \
+-v $(pwd)/ansible/secrets:/app/secrets:ro \
+-v $(pwd)/ansible/server:/app/server:ro \
+-v $(pwd)/ansible/inventory.yml:/app/inventory.yml:ro \
+-v $(pwd)/ansible/server/sh/start-ssh-agent.sh:/usr/local/bin/start-ssh-agent.sh:ro \
+-v $(pwd)/ansible/server/ssh:/root/.ssh:ro \
+ansible-image    
+
+
 docker inspect ansible-container     outside
 ls -l /run/ssh-agent.sock            inside
 
