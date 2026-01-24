@@ -1,11 +1,12 @@
+# ansible-playbook -i inventory.yml /app/playbooks/2_setup.yml --ask-become-pass
 ---
 - name: Install and configure Nginx
-  hosts: db_servers
+  hosts: master_server
   become: yes
   tasks:
     # Nginx
-    # - name: Include Nginx tasks
-    #   include_tasks: /app/playbooks/setup/nginx.yml    
+    - name: Include Nginx tasks
+      include_tasks: /app/playbooks/setup/nginx.yml    
     # # Bind9
     # - name: Include Bind9 tasks
     #   include_tasks: /app/playbooks/setup/bind9.yml  
@@ -16,7 +17,7 @@
     # - name: Include Fail2Ban tasks
     #   include_tasks: /app/playbooks/setup/fail2ban.yml
 # Docker
--  import_playbook: /app/playbooks/setup/docker.yml      
+# -  import_playbook: /app/playbooks/setup/docker.yml      
 
 # DBs
 # - name: Install and configure Nginx

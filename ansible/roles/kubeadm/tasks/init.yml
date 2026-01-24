@@ -1,0 +1,13 @@
+- name: Initialize Kubernetes control plane
+  ansible.builtin.command: >
+    kubeadm init
+    --pod-network-cidr={{ pod_network_cidr }}
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Setup kubeconfig for admin user
+  ansible.builtin.command: >
+    mkdir -p /home/{{ k8s_admin_user }}/.kube &&
+    cp /etc/kubernetes/admin.conf /home/{{ k8s_admin_user }}/.kube/config &&
+    chown -R {{ k8s_admin_user }}:{{ k8s_admin_user }} /home/{{ k8s_admin_user }}/.kube
+

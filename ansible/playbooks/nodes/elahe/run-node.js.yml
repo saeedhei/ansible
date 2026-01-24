@@ -1,0 +1,51 @@
+# ansible-playbook -i inventory.yml /app/playbooks/nodes/elahe/run-node.js.yml 
+---
+- name: Install Node.js 22.x (Latest LTS using NodeSource script)
+  hosts: almasar_server
+  become: yes
+
+  vars:
+    node_version_major: "22"
+
+  tasks:
+    - name: Get current Node.js version
+      command: node -v
+      register: current_node
+      failed_when: false
+      changed_when: false
+
+    - name: Remove Node.js if version is not {{ node_version_major }}.x
+      apt:
+        name: nodejs
+        state: absent
+      when:
+        - current_node.rc == 0
+        - current_node.stdout is not match("^v{{ node_version_major }}\\.")
+
+    - name: Install required packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
+
+    - name: Add NodeSource Node.js {{ node_version_major }} repository and install Node.js
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_{{ node_version_major }}.x | bash -
+        apt-get install -y nodejs
+      args:
+        executable: /bin/bash
+
+    - name: Verify Node.js version
+      command: node -v
+      register: node_version
+      changed_when: false
+
+    - name: Show Node.js version
+      debug:
+        msg: "Installed Node.js version: {{ node_version.stdout }}"
+
+

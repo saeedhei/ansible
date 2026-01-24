@@ -1,0 +1,150 @@
+# ansible-playbook -i inventory.yml /app/playbooks/nodes/elahe/run-node-app.yml 
+# sudo systemctl status almasaralabyad.com
+---
+- name: Setup Node.js 22.x and deploy Next.js app
+  hosts: almasar_server
+  become: yes
+
+  vars:
+    node_version_major: "22"
+    app_user: "nodeapp"
+    app_home: "/home/nodeapp"
+    app_repo: "https://github.com/saeedhei/almasaralabyad.com.git"   # <-- جایگزین با repo واقعی
+    app_name: "almasaralabyad.com"
+    app_dir: "/home/nodeapp/almasaralabyad.com"
+    node_env: "production"
+
+  tasks:
+    # -----------------------------------
+    #  نصب Node.js
+    # -----------------------------------
+    - name: Get current Node.js version
+      command: node -v
+      register: current_node
+      failed_when: false
+      changed_when: false
+
+    - name: Remove Node.js if version is not {{ node_version_major }}.x
+      apt:
+        name: nodejs
+        state: absent
+      when:
+        - current_node.rc == 0
+        - current_node.stdout is not match("^v" ~ node_version_major ~ "\\.")
+
+    - name: Install required packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+          - build-essential
+        state: present
+        update_cache: yes
+
+    - name: Add NodeSource Node.js {{ node_version_major }} repository and install Node.js
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_{{ node_version_major }}.x | bash -
+        apt-get install -y nodejs
+      args:
+        executable: /bin/bash
+
+    - name: Verify Node.js version
+      command: node -v
+      register: node_version
+      changed_when: false
+
+    - name: Show Node.js version
+      debug:
+        msg: "Installed Node.js version: {{ node_version.stdout }}"
+
+    # -----------------------------------
+    #  ساخت یوزر غیر-root
+    # -----------------------------------
+    - name: Create non-root user for Node.js app
+      user:
+        name: "{{ app_user }}"
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Remove old repo
+      file:
+        path: "{{ app_dir }}"
+        state: absent
+
+# 1️⃣ کلون repo با root یا nodeapp
+    - name: Clone Next.js app repository
+      git:
+        repo: "{{ app_repo }}"
+        dest: "{{ app_dir }}"
+        version: "main"
+        update: yes
+        force: yes
+        accept_hostkey: yes
+
+    # 2️⃣ تنظیم مالکیت
+    - name: Set ownership to nodeapp
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: yes
+
+    # 3️⃣ نصب npm dependency با root
+    - name: Install npm dependencies
+      npm:
+        path: "{{ app_dir }}"
+        production: yes
+
+    # 4️⃣ Build پروژه با root
+    - name: Build Next.js app
+      command: npm run build
+      args:
+        chdir: "{{ app_dir }}"
+
+    # 5️⃣ تغییر مالکیت به nodeapp برای اجرای سرویس
+    - name: Set ownership again to nodeapp
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: yes
+
+    # -----------------------------------
+    # 5️⃣ ایجاد systemd service
+    # -----------------------------------
+    - name: Create systemd service for Next.js app
+      copy:
+        dest: "/etc/systemd/system/{{ app_name }}.service"
+        content: |
+          [Unit]
+          Description=Next.js App - {{ app_name }}
+          After=network.target
+
+          [Service]
+          Type=simple
+          User={{ app_user }}
+          WorkingDirectory={{ app_dir }}
+          ExecStart=/usr/bin/npm run start
+          Restart=on-failure
+          Environment=NODE_ENV={{ node_env }}
+
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - Reload systemd
+
+    # -----------------------------------
+    # 6️⃣ فعال سازی و شروع سرویس
+    # -----------------------------------
+    - name: Enable and start Next.js app service
+      systemd:
+        name: "{{ app_name }}"
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Reload systemd
+      command: systemctl daemon-reload

@@ -1,17 +1,18 @@
+# ansible-playbook -i inventory.yml /app/playbooks/3_deploy.yml --ask-become-pass
 ---
 - name: Deploy Nginx configurations for multiple domains
   hosts: master_server
   become: yes
   vars:
     domains:
-      - name: gallusgarten.de
-        src: /app/server/nginx/gallusgarten.de.conf
-      - name: api.gallusgarten.de
-        src: /app/server/nginx/api.gallusgarten.de.conf        
-      - name: seointro.de
-        src: /app/server/nginx/seointro.de.conf
-      - name: couchdb.seointro.de
-        src: /app/server/nginx/couchdb.seointro.de.conf   
+      # - name: gallusgarten.de
+      #   src: /app/server/nginx/gallusgarten.de.conf
+      # - name: api.gallusgarten.de
+      #   src: /app/server/nginx/api.gallusgarten.de.conf        
+      # - name: seointro.de
+      #   src: /app/server/nginx/seointro.de.conf
+      # - name: couchdb.seointro.de
+      #   src: /app/server/nginx/couchdb.seointro.de.conf   
       - name: almasaralabyad.com
         src: /app/server/nginx/almasaralabyad.com.conf                   
 
@@ -49,26 +50,3 @@
 
 
 
-# - name: Deploy Application
-#   hosts: all
-#   become: yes
-#   tasks:
-#     - name: Clone application repository
-#       git:
-#         repo: 'https://github.com/example/repo.git'
-#         dest: /var/www/app
-    
-#     - name: Install application dependencies
-#       pip:
-#         requirements: /var/www/app/requirements.txt
-    
-#     - name: Configure application
-#       template:
-#         src: templates/app_config.j2
-#         dest: /etc/app/config.yml
-    
-#     - name: Start application service
-#       service:
-#         name: app
-#         state: started
-#         enabled: yes

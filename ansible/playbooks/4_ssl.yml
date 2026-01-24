@@ -1,3 +1,4 @@
+# ansible-playbook -i inventory.yml /app/playbooks/4_ssl.yml --ask-become-pass
 ---
 - name: Deploy SSL
   hosts: master_server

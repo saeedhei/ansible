@@ -1,0 +1,15 @@
+# ansible\roles\kubeadm\tasks\join.yml
+
+# Step 1: Get join command (control-plane)
+- name: Get join command
+  ansible.builtin.command: kubeadm token create --print-join-command
+  register: join_cmd
+  run_once: true
+  delegate_to: "{{ groups['control_plane'][0] }}"
+
+# Step 2: Join worker nodes
+- name: Join worker nodes
+  ansible.builtin.command: "{{ hostvars[groups['control_plane'][0]].join_cmd.stdout }}"
+  args:
+    creates: /etc/kubernetes/kubelet.conf
+  when: inventory_hostname in groups['workers']

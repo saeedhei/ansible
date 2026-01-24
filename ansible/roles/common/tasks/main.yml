@@ -1,0 +1,28 @@
+# ansible\roles\common\tasks\main.yml
+- name: Ensure swap is off
+  ansible.builtin.command: swapoff -a
+  become: true
+
+- name: Disable swap permanently
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^([^#].*swap.*)$'
+    replace: '# \1'
+  become: true
+
+- name: Set hostname based on inventory
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+  become: true
+
+- name: Update apt and install common packages
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - gnupg
+    state: present
+    update_cache: yes
+  become: true

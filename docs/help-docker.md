@@ -8,7 +8,8 @@ MSYS_NO_PATHCONV=1 docker run -it --rm \
 -v $(pwd)/ansible/playbooks:/app/playbooks:ro \
 -v $(pwd)/ansible/secrets:/app/secrets:ro \
 -v $(pwd)/ansible/server:/app/server:ro \
--v $(pwd)/ansible/inventory.yml:/app/inventory.yml:ro \
+-v $(pwd)/ansible/roles:/app/roles:ro \
+-v $(pwd)/ansible/inventory:/app/inventory:ro \
 ansible-image
 
 

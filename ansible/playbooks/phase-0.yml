@@ -1,0 +1,20 @@
+# ansible\playbooks\phase-0.yml
+---
+- name: Phase 0 - System Preparation
+  hosts: all
+  become: true
+  vars_files:
+      - /app/inventory/group_vars/all.yml
+  roles:
+    - common
+    - containerd
+    - sysctl
+
+# Fast syntax check only
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/phase-0.yml --syntax-check
+
+# If syntax ok → try a dry run
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/phase-0.yml --check --diff
+
+# If everything looks good → real run
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/phase-0.yml
