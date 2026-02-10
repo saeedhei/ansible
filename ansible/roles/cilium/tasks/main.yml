@@ -1,0 +1,61 @@
+# ansible\roles\cilium\tasks\main.yml
+---
+- name: Ensure Cilium Helm repository exists (idempotent add)
+  ansible.builtin.command: helm repo add cilium https://helm.cilium.io/ --force-update
+  changed_when: false
+  # become: true   # اگر helm با root اجرا می‌شه؛ اگر کاربر دیگری، become رو بردار
+
+- name: Update Helm repositories (just cilium)
+  ansible.builtin.command: helm repo update cilium
+  changed_when: false
+
+- name: Install or upgrade Cilium using Helm
+  ansible.builtin.command: >
+    helm upgrade --install cilium cilium/cilium
+    --namespace {{ cilium_namespace }}
+    --create-namespace
+    --version {{ cilium_version }}
+    --set kubeProxyReplacement=true
+    --set hubble.enabled=true
+    --set hubble.ui.enabled=true
+    --set hubble.relay.enabled=true
+    --set ipam.mode=kubernetes
+    --set rollOutCiliumPods=true
+  register: helm_install
+  changed_when: "'deployed' in helm_install.stdout or 'upgraded' in helm_install.stdout or 'has been upgraded' in helm_install.stdout"
+  retries: 3
+  delay: 20
+  until: helm_install.rc == 0
+
+- name: Wait for Cilium pods to become ready (timeout 10 دقیقه)
+  ansible.builtin.shell: >
+    kubectl wait --namespace {{ cilium_namespace }}
+    --for=condition=Ready pod -l k8s-app=cilium --timeout=600s
+  register: wait_cilium
+  changed_when: false
+  retries: 6
+  delay: 30
+  until: wait_cilium.rc == 0
+  ignore_errors: true   # اگر timeout شد، ادامه بده اما log بگیر
+
+- name: Get current status of Cilium pods
+  ansible.builtin.command: >
+    kubectl -n {{ cilium_namespace }} get pods -l k8s-app=cilium -o wide --no-headers
+  register: cilium_pods_status
+  changed_when: false
+
+- name: Display Cilium pods status
+  ansible.builtin.debug:
+    msg: "{{ cilium_pods_status.stdout_lines | default(['No pods found or kubectl issue']) }}"
+
+- name: Optional - Check overall Cilium status (اگر cilium-cli نصب داری)
+  ansible.builtin.command: cilium status --wait
+  register: cilium_status
+  changed_when: false
+  ignore_errors: true
+  when: ansible_facts.packages is defined and 'cilium-cli' in ansible_facts.packages
+
+- name: Show Cilium CLI status output (اگر اجرا شد)
+  ansible.builtin.debug:
+    msg: "{{ cilium_status.stdout_lines | default(['cilium-cli not installed or failed']) }}"
+  when: cilium_status.rc is defined and cilium_status.rc == 0

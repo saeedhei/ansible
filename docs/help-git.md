@@ -1,4 +1,4 @@
 git add .
-git commit -m "phase-1: bootstrap kubernetes cluster with kubeadm"
+git commit -m "phase-2 added"
 git push origin main
 

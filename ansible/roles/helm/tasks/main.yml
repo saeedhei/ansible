@@ -1,0 +1,70 @@
+# ansible\roles\helm\tasks\main.yml
+---
+- name: Remove broken Helm repo file
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/helm-stable-debian.list
+    state: absent
+  become: true
+
+- name: Remove old Helm key
+  ansible.builtin.file:
+    path: /usr/share/keyrings/helm.gpg
+    state: absent
+  become: true
+
+- name: Install Helm prerequisites
+  ansible.builtin.apt:
+    name: "{{ helm_apt_prerequisites }}"
+    state: present
+    update_cache: yes
+  become: true
+  when: helm_install and helm_install_method == 'apt'
+
+- name: Download and install Helm GPG key (dearmored)
+  ansible.builtin.shell: >
+    curl -fsSL {{ helm_apt_key_url }} | gpg --dearmor -o {{ helm_apt_key_path }}
+  args:
+    creates: "{{ helm_apt_key_path }}"
+  changed_when: false
+  become: true
+  when: helm_install and helm_install_method == 'apt'
+
+- name: Ensure key has correct permissions
+  ansible.builtin.file:
+    path: "{{ helm_apt_key_path }}"
+    mode: '0644'
+  become: true
+  when: helm_install and helm_install_method == 'apt'
+
+- name: Add Helm APT repository
+  ansible.builtin.copy:
+    content: "{{ helm_apt_repo_line }}\n"
+    dest: "/etc/apt/sources.list.d/{{ helm_apt_repo_filename }}.list"
+    mode: '0644'
+  register: helm_repo_result
+  become: true
+  when: helm_install and helm_install_method == 'apt'
+
+- name: Update apt cache after adding Helm repo
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+  when: helm_install and helm_install_method == 'apt' and helm_repo_result.changed
+
+- name: Install Helm package
+  ansible.builtin.apt:
+    name: helm
+    state: present
+  become: true
+  when: helm_install and helm_install_method == 'apt'
+
+- name: Verify Helm version (optional)
+  ansible.builtin.command: helm version --short
+  register: helm_version_output
+  changed_when: false
+  when: helm_install and helm_verify_version
+
+- name: Display installed Helm version
+  ansible.builtin.debug:
+    msg: "Helm installed: {{ helm_version_output.stdout | default('not checked') }}"
+  when: helm_install and helm_verify_version

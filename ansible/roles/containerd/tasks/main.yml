@@ -1,29 +1,62 @@
-- name: Install containerd dependencies
-  ansible.builtin.apt:
-    name:
-      - curl
-      - gnupg2
-      - software-properties-common
-    state: present
-    update_cache: yes
-  become: true
-
-- name: Install containerd
+# ansible\roles\containerd\tasks\main.yml
+---
+- name: Install containerd package
   ansible.builtin.apt:
     name: containerd
     state: present
     update_cache: yes
   become: true
 
-- name: Configure containerd default
-  ansible.builtin.command: containerd config default > /etc/containerd/config.toml
-  args:
-    creates: /etc/containerd/config.toml
+- name: Create /etc/containerd directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
   become: true
 
-- name: Restart containerd
-  ansible.builtin.service:
-    name: containerd
-    state: restarted
-    enabled: true
+- name: Check if containerd config file already exists
+  ansible.builtin.stat:
+    path: /etc/containerd/config.toml
+  register: config_file
+
+- name: Generate default containerd config (only if file does not exist)
+  ansible.builtin.command: containerd config default
+  register: containerd_default_config
+  changed_when: false
+  when: not config_file.stat.exists
   become: true
+
+- name: Write default containerd config (only if newly generated)
+  ansible.builtin.copy:
+    dest: /etc/containerd/config.toml
+    content: "{{ containerd_default_config.stdout }}"
+    owner: root
+    group: root
+    mode: '0644'
+  when: not config_file.stat.exists and containerd_default_config.stdout is defined
+  become: true
+
+- name: Ensure SystemdCgroup is set to true (replace if false exists)
+  ansible.builtin.replace:
+    path: /etc/containerd/config.toml
+    regexp: '^\s*SystemdCgroup\s*=\s*false'
+    replace: '    SystemdCgroup = true'
+  become: true
+  register: cgroup_replace
+  changed_when: cgroup_replace.changed
+  notify:
+    - Restart containerd
+    - Restart kubelet
+
+- name: Ensure SystemdCgroup exists (add if missing)
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: '^\s*SystemdCgroup\s*='
+    line: '    SystemdCgroup = true'
+    insertafter: '^\[plugins\."io\.containerd\.grpc\.v1\.cri"\.containerd\.runtimes\.runc\.options\]'
+    create: yes
+  become: true
+  when: not cgroup_replace.changed
+  notify:
+    - Restart containerd
+    - Restart kubelet

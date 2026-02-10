@@ -1,12 +1,33 @@
-- name: Add Kubernetes apt key
-  ansible.builtin.get_url:
-    url: https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/Release.key
-    dest: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+# ansible\roles\kubeadm\tasks\install.yml
+---
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
 
-- name: Add Kubernetes apt repo
+- name: Add Kubernetes apt signing key
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/Release.key \
+    | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  args:
+    executable: /bin/bash
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  when: not ansible_check_mode
+
+- name: Set permissions on Kubernetes apt key
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    mode: '0644'
+  when: not ansible_check_mode
+
+- name: Add Kubernetes apt repository
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/ /"
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/ /"
+    filename: kubernetes
     state: present
+  when: not ansible_check_mode
 
 - name: Install kubeadm, kubelet, kubectl
   ansible.builtin.apt:
@@ -18,10 +39,6 @@
     update_cache: yes
 
 - name: Hold Kubernetes packages
-  ansible.builtin.apt:
-    name:
-      - kubeadm
-      - kubelet
-      - kubectl
-    state: present
-    mark_hold: yes
+  ansible.builtin.command:
+    cmd: apt-mark hold kubeadm kubelet kubectl
+  changed_when: false

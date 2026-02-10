@@ -1,0 +1,10 @@
+---
+- name: Reload ufw
+  ansible.builtin.command: ufw reload
+  become: true
+  changed_when: false
+
+- name: Enable ufw after reset
+  ansible.builtin.command: ufw --force enable
+  become: true
+  changed_when: true

@@ -1,0 +1,12 @@
+galaxy_info:
+  role_name: helm
+  author: Saeed Heidarizarei
+  description: Install Helm 3 on Ubuntu 22 using keyring-based APT repository
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+
+dependencies: []

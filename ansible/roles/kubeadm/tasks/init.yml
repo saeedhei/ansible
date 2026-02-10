@@ -1,13 +1,38 @@
+# ansible\roles\kubeadm\tasks\init.yml
+---
 - name: Initialize Kubernetes control plane
   ansible.builtin.command: >
     kubeadm init
     --pod-network-cidr={{ pod_network_cidr }}
   args:
     creates: /etc/kubernetes/admin.conf
+  when: inventory_hostname in groups['control_plane']
 
-- name: Setup kubeconfig for admin user
-  ansible.builtin.command: >
-    mkdir -p /home/{{ k8s_admin_user }}/.kube &&
-    cp /etc/kubernetes/admin.conf /home/{{ k8s_admin_user }}/.kube/config &&
-    chown -R {{ k8s_admin_user }}:{{ k8s_admin_user }} /home/{{ k8s_admin_user }}/.kube
+- name: Create .kube directory for admin user
+  ansible.builtin.file:
+    path: /home/{{ k8s_admin_user }}/.kube
+    state: directory
+    owner: "{{ k8s_admin_user }}"
+    group: "{{ k8s_admin_user }}"
+    mode: '0755'
+  when: inventory_hostname in groups['control_plane']
 
+- name: Copy admin kubeconfig
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ k8s_admin_user }}/.kube/config
+    remote_src: yes
+    owner: "{{ k8s_admin_user }}"
+    group: "{{ k8s_admin_user }}"
+    mode: '0644'
+  when: inventory_hostname in groups['control_plane']
+
+# - name: Wait for kube-apiserver to listen on 6443
+#   ansible.builtin.wait_for:
+#     host: 127.0.0.1
+#     port: 6443
+#     state: started
+#     delay: 5
+#     timeout: 180
+#   delegate_to: "{{ groups['control_plane'][0] }}"
+#   run_once: true

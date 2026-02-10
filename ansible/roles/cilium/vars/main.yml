@@ -1,0 +1,4 @@
+# roles/cilium/vars/main.yml
+---
+cilium_version: "1.18.6"              
+cilium_namespace: "kube-system"

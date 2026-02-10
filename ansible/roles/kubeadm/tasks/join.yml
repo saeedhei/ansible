@@ -1,5 +1,12 @@
 # ansible\roles\kubeadm\tasks\join.yml
 
+- name: Ensure kubelet is enabled and started
+  ansible.builtin.service:
+    name: kubelet
+    state: started
+    enabled: true
+  become: true
+
 # Step 1: Get join command (control-plane)
 - name: Get join command
   ansible.builtin.command: kubeadm token create --print-join-command
@@ -9,7 +16,10 @@
 
 # Step 2: Join worker nodes
 - name: Join worker nodes
-  ansible.builtin.command: "{{ hostvars[groups['control_plane'][0]].join_cmd.stdout }}"
+  ansible.builtin.command: >
+    {{ hostvars[groups['control_plane'][0]].join_cmd.stdout }}
+    --cri-socket /run/containerd/containerd.sock
+    --ignore-preflight-errors=all
   args:
     creates: /etc/kubernetes/kubelet.conf
   when: inventory_hostname in groups['workers']

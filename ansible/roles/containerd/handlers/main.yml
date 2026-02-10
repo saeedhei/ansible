@@ -1,0 +1,13 @@
+---
+# roles/containerd/handlers/main.yml
+
+- name: Restart containerd
+  ansible.builtin.service:
+    name: containerd
+    state: restarted
+
+- name: Restart kubelet  # اختیاری – اگر بعد از containerd restart لازم داری
+  ansible.builtin.service:
+    name: kubelet
+    state: restarted
+  ignore_errors: true

@@ -1,0 +1,63 @@
+---
+- name: Install ufw if not present
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Reset ufw completely if requested (فقط وقتی true باشه - اختیاری)
+  ansible.builtin.command: ufw --force reset
+  become: true
+  when: ufw_reset_and_restrict | default(false) | bool
+  changed_when: true
+  notify: Enable ufw after reset
+
+- name: Set default incoming policy to deny
+  ansible.builtin.command: ufw default deny incoming
+  become: true
+  changed_when: false
+
+- name: Allow outgoing traffic
+  ansible.builtin.command: ufw default allow outgoing
+  become: true
+  changed_when: false
+
+- name: جمع‌آوری IP همه نودهای کلاستر
+  ansible.builtin.set_fact:
+    cluster_ips: "{{ groups['all'] | map('extract', hostvars, 'ansible_host') | unique | list }}"
+
+- name: Allow Kubernetes API (6443) فقط از IPهای کلاستر (یک rule جدا برای هر IP)
+  ansible.builtin.ufw:
+    rule: allow
+    port: 6443
+    proto: tcp
+    src: "{{ item }}"
+    comment: "Kubernetes API Server - only cluster nodes - from {{ item }}"
+  loop: "{{ cluster_ips }}"
+  become: true
+  notify: Reload ufw
+
+- name: Allow public ports (حفظ پورت‌های فعلی)
+  ansible.builtin.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+    comment: "{{ item.comment }}"
+  loop: "{{ public_ports }}"
+  become: true
+  notify: Reload ufw
+
+- name: فعال کردن ufw اگر خاموش باشد
+  ansible.builtin.command: ufw --force enable
+  become: true
+  changed_when: true
+  notify: Reload ufw
+
+- name: Deny any other incoming to 6443 (امنیت اضافی)
+  ansible.builtin.ufw:
+    rule: deny
+    port: 6443
+    proto: tcp
+  become: true
+  notify: Reload ufw
