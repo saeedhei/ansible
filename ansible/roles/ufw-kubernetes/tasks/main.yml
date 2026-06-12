@@ -1,3 +1,4 @@
+# ansible\roles\ufw-kubernetes\tasks\main.yml
 ---
 - name: Install ufw if not present
   ansible.builtin.apt:
@@ -27,14 +28,43 @@
   ansible.builtin.set_fact:
     cluster_ips: "{{ groups['all'] | map('extract', hostvars, 'ansible_host') | unique | list }}"
 
-- name: Allow Kubernetes API (6443) فقط از IPهای کلاستر (یک rule جدا برای هر IP)
+- name: جمع‌آوری IP نودهای control plane
+  ansible.builtin.set_fact:
+    control_plane_ips: "{{ groups['control_plane'] | map('extract', hostvars, 'ansible_host') | unique | list }}"
+
+- name: Allow Kubelet API (10250) فقط از control plane روی workerها
   ansible.builtin.ufw:
     rule: allow
-    port: 6443
+    port: 10250
     proto: tcp
     src: "{{ item }}"
-    comment: "Kubernetes API Server - only cluster nodes - from {{ item }}"
-  loop: "{{ cluster_ips }}"
+    comment: "Kubelet API from control plane - {{ item }}"
+  loop: "{{ control_plane_ips }}"
+  become: true
+  when: inventory_hostname in groups['workers']
+  notify: Reload ufw
+
+# Allow Pod-to-Pod traffic
+- name: Allow Pod-to-Pod traffic for CNI
+  ansible.builtin.command: >
+    ufw route allow from {{ item.subnet }} to {{ item.subnet }} comment '{{ item.comment }}'
+  loop: "{{ kubernetes_firewall_subnets }}"
+  become: true
+  notify: Reload ufw
+
+- name: Allow Kubernetes firewall ports only for cluster IPs
+  ansible.builtin.ufw:
+    rule: allow
+    port: "{{ port_item.port }}"
+    proto: "{{ port_item.proto }}"
+    src: "{{ ip }}"
+    comment: "{{ port_item.comment }} from {{ ip }}"
+  loop: "{{ cluster_ips | product(kubernetes_firewall_ports) | list }}"
+  loop_control:
+    loop_var: pair
+  vars:
+    ip: "{{ pair[0] }}"
+    port_item: "{{ pair[1] }}"
   become: true
   notify: Reload ufw
 

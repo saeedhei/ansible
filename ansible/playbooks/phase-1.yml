@@ -7,7 +7,7 @@
       - /app/inventory/group_vars/all.yml
   roles:
     - ufw-kubernetes
-    - kubeadm
+    # - kubeadm
 
 # Fast syntax check only
 # ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/phase-1.yml --ask-become-pass --syntax-check

@@ -1,3 +1,4 @@
+# ansible/roles/ufw-kubernetes/defaults/main.yml
 ---
 # پورت‌های پیش‌فرض Kubernetes که باید باز بشن (می‌تونی اضافه/کم کنی)
 kubernetes_firewall_ports:
@@ -5,10 +6,18 @@ kubernetes_firewall_ports:
     proto: tcp
     comment: Kubernetes API Server - only cluster nodes
 
-  # اگر بعداً Flannel/Calico یا دیگر CNI استفاده کردی، این‌ها رو اضافه کن
-  # - port: 8472
-  #   proto: udp
-  #   comment: Flannel VXLAN (optional)
+  - port: 8472
+    proto: udp
+    comment: Cilium VXLAN
+
+  - port: 4240
+    proto: tcp
+    comment: Cilium health
+
+# Pod-to-Pod subnet (برای Cilium VXLAN routing)
+kubernetes_firewall_subnets:
+  - subnet: 10.244.0.0/16
+    comment: Pod to Pod traffic
 
 # پورت‌های عمومی که می‌خوای نگه داری (از الان باز هستن)
 public_ports:

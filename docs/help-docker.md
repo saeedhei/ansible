@@ -6,7 +6,7 @@ docker ps -q -f name=ansible-container && docker stop ansible-container; \
 MSYS_NO_PATHCONV=1 docker run -it --rm \
 --name ansible-container \
 -v $(pwd)/ansible/playbooks:/app/playbooks:ro \
--v $(pwd)/ansible/secrets:/app/secrets:ro \
+-v $(pwd)/ansible/secrets:/app/secrets \
 -v $(pwd)/ansible/server:/app/server:ro \
 -v $(pwd)/ansible/roles:/app/roles:ro \
 -v $(pwd)/ansible/inventory:/app/inventory:ro \

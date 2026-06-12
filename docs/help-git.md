@@ -1,4 +1,4 @@
 git add .
-git commit -m "phase-2 added"
+git commit -m "new vps updated"
 git push origin main
 

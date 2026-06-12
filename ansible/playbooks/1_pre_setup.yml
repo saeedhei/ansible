@@ -3,54 +3,144 @@
   hosts: newvps
   become: yes
   gather_facts: yes
+  vars_files:
+      - /app/inventory/group_vars/newvps.yaml
 
   tasks:
     - name: Ensure the system is Debian-based
       debug:
         msg: "This host is {{ ansible_facts['distribution'] }}"
-      when: ansible_facts['os_family'] == 'Debian'
+      when: ansible_facts.os_family == "Debian"
 
     - name: Update package lists
       ansible.builtin.apt:
         update_cache: yes
         cache_valid_time: 3600  # Cache is valid for 1 hour
-      when: ansible_facts['os_family'] == 'Debian'
+      when: ansible_facts.os_family == "Debian"
 
-    - name: Create or update a sudo user
-      user:
+    - name: Create sudo user
+      ansible.builtin.user:
         name: "{{ new_username }}"
-        password: "{{ vault_user_password | password_hash('sha512') }}"
+        state: present
         shell: /bin/bash
         groups: sudo
-        append: true
-        create_home: true
-        state: present
+        append: yes
+        create_home: yes
+        password: "{{ vault_user_password | password_hash('sha512') }}"
     
-    - name: Ensure passwordless sudo for sudo group (optional)
-      lineinfile:
-        path: /etc/sudoers
-        state: present
-        regexp: '^%sudo'
-        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
-        validate: '/usr/sbin/visudo -cf %s'
-
     - name: Set authorized key for remote user
       ansible.posix.authorized_key:
         user: "{{ new_username }}"
         state: present
-        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
 
-    - name: Disable password authentication for root
+    - name: Fix SSH permissions
+      file:
+        path: /home/{{ new_username }}/.ssh
+        state: directory
+        owner: "{{ new_username }}"
+        group: "{{ new_username }}"
+        mode: "0700"
+
+    - name: Fix authorized_keys permissions
+      ansible.builtin.file:
+        path: "/home/{{ new_username }}/.ssh/authorized_keys"
+        owner: "{{ new_username }}"
+        group: "{{ new_username }}"
+        mode: "0600"
+
+    # 1. Install UFW
+    - name: Install UFW
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+        update_cache: yes
+      when: ansible_facts.os_family == "Debian"
+
+
+    # 2. Allow SSH on NEW port (2222)
+    - name: Allow SSH on port 2222
+      community.general.ufw:
+        rule: allow
+        port: "2222"
+        proto: tcp
+
+
+    # 3. (Optional safety step) Allow old SSH port temporarily (22)
+    # فقط برای migration - بعداً باید حذف شود
+    - name: Allow SSH on port 22 temporarily
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+
+
+    # 4. Enable and Set default firewall policy
+    - name: Set UFW default policy
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    # 5. Reload UFW to ensure rules applied
+    - name: Reload UFW
+      community.general.ufw:
+        state: reloaded
+
+    - name: Set SSH port to 2222
       lineinfile:
         path: /etc/ssh/sshd_config
-        state: present
-        regexp: '^#?PermitRootLogin'
-        line: 'PermitRootLogin prohibit-password'
-      notify: Restart SSH
+        regexp: '^#?Port'
+        line: 'Port 2222'
 
-  handlers:
-    - name: Restart SSH
-      service:
+
+    - name: Disable root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+
+
+    - name: Enable public key authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+
+
+    - name: Restrict SSH users
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?AllowUsers'
+        line: 'AllowUsers {{ new_username }}'
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart SSH socket
+      ansible.builtin.service:
+        name: ssh.socket
+        state: restarted
+
+    - name: Restart SSH service
+      ansible.builtin.service:
         name: ssh
-        state: restarted              
+        state: restarted
+
+
+# Fast syntax check only
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/1_pre_setup.yml --syntax-check
+
+# If syntax ok → try a dry run
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/1_pre_setup.yml --check --diff
+
+# If everything looks good → real run
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/1_pre_setup.yml --ask-vault-pass --extra-vars "@/app/secrets/secrets.yml"
     

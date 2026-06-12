@@ -1,7 +1,6 @@
-# ansible-playbook -i inventory.yml /app/playbooks/4_ssl.yml --ask-become-pass
 ---
 - name: Deploy SSL
-  hosts: master_server
+  hosts: userver
   become: yes
   vars:
     domains:
@@ -55,3 +54,12 @@
 
     - name: Perform dry-run renewal test
       command: certbot renew --dry-run
+
+# Fast syntax check only
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/4_ssl.yml --ask-become-pass --syntax-check
+
+# If syntax ok → try a dry run
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/4_ssl.yml --ask-become-pass --check --diff 
+
+# If everything looks good → real runansible-playbook -i /app/inventory/contabo.yml /app/playbooks/4_ssl.yml --ask-become-pass
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/4_ssl.yml --ask-become-pass
