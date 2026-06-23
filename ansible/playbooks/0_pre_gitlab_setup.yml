@@ -1,10 +1,10 @@
 ---
 - name: Install and configure New Server
-  hosts: newvps
+  hosts: gitlab_vps
   become: yes
   gather_facts: yes
   vars_files:
-      - /app/inventory/group_vars/newvps.yaml
+      - /app/inventory/group_vars/new-gitlab-vps.yaml
 
   tasks:
     - name: Ensure the system is Debian-based
@@ -57,21 +57,28 @@
         update_cache: yes
       when: ansible_facts.os_family == "Debian"
 
+    - name: Allow SSH VPS
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
 
-    # 2. Allow SSH on NEW port (2222)
-    - name: Allow SSH on port 2222
+    - name: Allow GitLab SSH 
       community.general.ufw:
         rule: allow
         port: "2222"
         proto: tcp
 
-
-    # 3. (Optional safety step) Allow old SSH port temporarily (22)
-    # فقط برای migration - بعداً باید حذف شود
-    - name: Allow SSH on port 22 temporarily
+    - name: Allow HTTP
       community.general.ufw:
         rule: allow
-        port: "22"
+        port: "80"
+        proto: tcp
+
+    - name: Allow HTTPS
+      community.general.ufw:
+        rule: allow
+        port: "443"
         proto: tcp
 
 
@@ -86,19 +93,11 @@
       community.general.ufw:
         state: reloaded
 
-    - name: Set SSH port to 2222
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^#?Port'
-        line: 'Port 2222'
-
-
     - name: Disable root login
       lineinfile:
         path: /etc/ssh/sshd_config
         regexp: '^#?PermitRootLogin'
         line: 'PermitRootLogin no'
-
 
     - name: Disable password authentication
       lineinfile:
@@ -140,6 +139,8 @@
         state: restarted
 
 
+# ping ip
+# nslookup gitlab.techaxon.de
 # Fast syntax check only
 # ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/1_pre_setup.yml --syntax-check
 
@@ -147,5 +148,5 @@
 # ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/1_pre_setup.yml --check --diff
 
 # If everything looks good → real run
-# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/1_pre_setup.yml --ask-vault-pass --extra-vars "@/app/secrets/secrets.yml"
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/0_pre_gitlab_setup.yml --ask-vault-pass --extra-vars "@/app/secrets/secrets.yml"
     

@@ -1,0 +1,24 @@
+---
+- name: Install Fail2Ban
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+    update_cache: yes
+
+- name: Enable and start Fail2Ban
+  ansible.builtin.systemd:
+    name: fail2ban
+    enabled: yes
+    state: started
+
+- name: Configure SSH jail
+  ansible.builtin.copy:
+    dest: /etc/fail2ban/jail.local
+    mode: '0644'
+    content: |
+      [sshd]
+      enabled = true
+      port = 2222
+      maxretry = 5
+      bantime = 1h
+  notify: restart fail2ban
