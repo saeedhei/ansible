@@ -1,11 +1,15 @@
 ---
-- name: Base server setup
-  hosts: control_plane
+- name: workers setup
+  hosts: k8s-worker-1
   become: yes
+  gather_facts: yes
+  vars_files:
+      - /app/inventory/group_vars/workers.yaml
 
   roles:
-    - ufw
-    - fail2ban
+    # - ufw
+    # - fail2ban
+    - docker
     # - nginx
 
 # ---
@@ -48,4 +52,8 @@
 # ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup.yml --ask-become-pass --check --diff 
 
 # If everything looks good → real run
-# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup.yml --ask-become-pass
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup.yml --ask-become-pass --ask-vault-pass --extra-vars "@/app/secrets/secrets.yml"
+
+# Debugging
+# ansible k8s-worker-1 -i /app/inventory/contabo.yml -m debug -a "var=ansible_host" 
+# ansible k8s-worker-1 -i /app/inventory/contabo.yml -m debug -a "var=ansible_user"

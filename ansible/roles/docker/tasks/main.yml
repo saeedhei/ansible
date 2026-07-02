@@ -1,0 +1,112 @@
+
+# =====================================================
+# 0. FIX BROKEN APT STATE (CRITICAL)
+# =====================================================
+
+
+- name: Fix dpkg state
+  ansible.builtin.command: dpkg --configure -a
+
+- name: Fix apt broken dependencies
+  ansible.builtin.command: apt --fix-broken install -y
+
+- name: Clean apt cache
+  ansible.builtin.shell: |
+    apt clean
+    rm -rf /var/lib/apt/lists/*
+  args:
+    warn: false
+
+# =====================================================
+# 1. REMOVE ANY OLD DOCKER REPOS (AVOID CONFLICTS)
+# =====================================================
+
+- name: Remove old Docker repo files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/docker.list
+    - /etc/apt/sources.list.d/docker.sources
+
+# =====================================================
+# 2. BASE DEPENDENCIES
+# =====================================================
+
+- name: Install required dependencies
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+# =====================================================
+# 3. KEYRING (CORRECT FOR UBUNTU 24)
+# =====================================================
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download Docker GPG key using curl
+  ansible.builtin.command:
+    cmd: curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    creates: /etc/apt/keyrings/docker.asc # اگر فایل از قبل بود دوباره دانلود نکند
+
+- name: Ensure key is readable
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+# =====================================================
+# 4. ADD OFFICIAL DOCKER REPO (UBUNTU 24 SAFE)
+# =====================================================
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: >
+      deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/ubuntu
+      {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+    update_cache: yes
+
+# =====================================================
+# 5. INSTALL DOCKER ENGINE
+# =====================================================
+
+- name: Install Docker Engine
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+# =====================================================
+# 6. ENABLE AND START DOCKER
+# =====================================================
+
+- name: Enable Docker service
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+# =====================================================
+# 7. ADD USER TO DOCKER GROUP
+# =====================================================
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ new_username }}"
+    groups: docker
+    append: yes
