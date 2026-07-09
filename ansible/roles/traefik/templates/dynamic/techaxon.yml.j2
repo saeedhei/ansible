@@ -1,0 +1,16 @@
+# add in tasks in Deploy dynamic configs
+http:
+  routers:
+    techaxon:
+      rule: Host(`techaxon.de`)
+      entryPoints:
+        - websecure
+      service: techaxon
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    techaxon:
+      loadBalancer:
+        servers:
+          - url: "http://techaxon:3000"

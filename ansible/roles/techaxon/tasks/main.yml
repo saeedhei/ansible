@@ -1,0 +1,30 @@
+---
+- name: Create application directory
+  ansible.builtin.file:
+    path: "{{ techaxon_path }}"
+    state: directory
+    owner: albert
+    group: albert
+    mode: "0755"
+
+- name: Copy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ techaxon_path }}/docker-compose.yml"
+    owner: albert
+    group: albert
+    mode: "0644"
+
+- name: Pull latest image
+  community.docker.docker_compose_v2:
+    project_src: "{{ techaxon_path }}"
+    pull: always
+  become: false
+  become_user: albert
+
+- name: Start application
+  community.docker.docker_compose_v2:
+    project_src: "{{ techaxon_path }}"
+    state: present
+  become: false
+  become_user: albert

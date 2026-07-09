@@ -19,6 +19,9 @@ RUN apt-get update
 # RUN apt-get install -y ansible
 RUN apt-get install -y ansible=5.10.0-1ppa~focal
 
+# Install Ansible collections
+RUN ansible-galaxy collection install community.docker
+
 WORKDIR /app
 
 # Add Ansible configuration, inventory, and playbooks

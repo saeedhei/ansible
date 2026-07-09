@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: "traefik:{{ traefik_version }}"
+    container_name: traefik
+    restart: unless-stopped
+    
+    ports:
+      - "{{ entrypoint_web_port }}:80"
+      - "{{ entrypoint_websecure_port }}:443"
+      
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "{{ traefik_dir }}/traefik.yml:/etc/traefik/traefik.yml:ro"
+      - "{{ traefik_dir }}/dynamic:/etc/traefik/dynamic:ro"
+      - "{{ traefik_dir }}/letsencrypt:/letsencrypt"
+      
+    networks:
+      - proxy
+
+
+networks:
+  proxy:
+    external: true

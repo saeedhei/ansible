@@ -1,0 +1,23 @@
+http:
+  routers:
+    dashboard:
+      rule: Host(`traefik.techaxon.de`)
+      entryPoints:
+        - websecure
+      service: api@internal
+      middlewares:
+        - auth
+        - mylimit
+      tls:
+        certResolver: letsencrypt
+
+  middlewares:
+    auth:
+      basicAuth:
+        users:
+          - "{{ traefik_basic_auth }}"
+
+    mylimit:
+      rateLimit:
+        average: 5
+        burst: 10

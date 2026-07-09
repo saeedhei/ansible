@@ -1,0 +1,8 @@
+---
+techaxon_path: /opt/techaxon
+
+techaxon_image: gitlab.techaxon.de:5050/techaxon/techaxon:latest
+
+techaxon_container_name: techaxon
+
+techaxon_port: 3000

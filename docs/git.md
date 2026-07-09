@@ -1,4 +1,4 @@
 git add .
-git commit -m "new vps updated"
+git commit -m "updated"
 git push origin main
 

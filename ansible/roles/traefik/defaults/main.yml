@@ -1,0 +1,51 @@
+---
+# =========================
+# Traefik Base Config
+# =========================
+traefik_version: "v3.7"
+traefik_dir: /opt/traefik
+
+# =========================
+# Domain Configuration
+# =========================
+traefik_dashboard_domain: traefik.techaxon.de
+
+# =========================
+# Let's Encrypt
+# =========================
+letsencrypt_email: saeedhei@gmail.com
+acme_storage: /letsencrypt/acme.json
+
+# =========================
+# Basic Auth (Dashboard)
+# NOTE: should be overridden via vars or vault
+# =========================
+dashboard_user: admin
+dashboard_password: change_me_now
+
+# Will be generated dynamically in tasks:
+traefik_basic_auth: ""
+
+# =========================
+# Rate Limiting (Security)
+# =========================
+rate_limit_average: 5
+rate_limit_burst: 10
+
+# =========================
+# EntryPoints
+# =========================
+entrypoint_web_port: 80
+entrypoint_websecure_port: 443
+
+# =========================
+# Providers
+# =========================
+docker_exposed_by_default: false
+file_provider_watch: true
+
+# =========================
+# Logging
+# =========================
+log_level: INFO
+access_log: true

@@ -9,8 +9,9 @@
   roles:
     # - ufw
     # - fail2ban
-    - docker
-    # - nginx
+    # - docker
+    - traefik
+    # - techaxon
 
 # ---
 # - name: Install and configure Nginx
@@ -46,13 +47,13 @@
 
 
 # Fast syntax check only
-# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup.yml --ask-become-pass --syntax-check
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/_workers.yml --ask-become-pass --syntax-check
 
 # If syntax ok → try a dry run
-# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup.yml --ask-become-pass --check --diff 
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup_workers.yml --ask-become-pass --check --diff 
 
 # If everything looks good → real run
-# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup.yml --ask-become-pass --ask-vault-pass --extra-vars "@/app/secrets/secrets.yml"
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup_workers.yml --ask-become-pass --ask-vault-pass --extra-vars "@/app/secrets/secrets.yml"
 
 # Debugging
 # ansible k8s-worker-1 -i /app/inventory/contabo.yml -m debug -a "var=ansible_host" 

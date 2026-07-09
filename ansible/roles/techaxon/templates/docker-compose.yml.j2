@@ -1,0 +1,20 @@
+services:
+  techaxon:
+    image: {{ techaxon_image }}
+    container_name: {{ techaxon_container_name }}
+
+    restart: unless-stopped
+
+    ports:
+      - "{{ techaxon_port }}:3000"
+
+    environment:
+      NODE_ENV: production
+
+    networks:
+      - proxy
+
+
+networks:
+  proxy:
+    external: true

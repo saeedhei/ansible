@@ -1,0 +1,106 @@
+---
+# =====================================================
+# Create base directories
+# =====================================================
+- name: Create Traefik directory
+  ansible.builtin.file:
+    path: "{{ traefik_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Create dynamic directory
+  ansible.builtin.file:
+    path: "{{ traefik_dir }}/dynamic"
+    state: directory
+    mode: "0755"
+
+- name: Create letsencrypt directory
+  ansible.builtin.file:
+    path: "{{ traefik_dir }}/letsencrypt"
+    state: directory
+    mode: "0700"
+
+# =====================================================
+# Create Docker Network
+# =====================================================
+- name: Create Traefik docker network
+  ansible.builtin.command:
+    cmd: docker network create proxy
+  register: proxy_network
+  failed_when: false
+  changed_when: "'created' in proxy_network.stdout"
+
+# =====================================================
+# Generate Basic Auth (dashboard) - USING DOCKER
+# =====================================================
+- name: Generate htpasswd hash via temporary docker container
+  ansible.builtin.command:
+    cmd: "docker run --rm httpd:alpine htpasswd -nbB {{ dashboard_user }} {{ dashboard_password }}"
+  register: htpass
+  changed_when: false
+  no_log: true
+
+- name: Set Traefik basic auth fact
+  ansible.builtin.set_fact:
+    traefik_basic_auth: "{{ htpass.stdout }}"
+  no_log: true
+
+# =====================================================
+# Deploy Configurations (Templates)
+# =====================================================
+- name: Deploy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ traefik_dir }}/docker-compose.yml"
+    mode: "0644"
+  notify: Restart Traefik
+
+- name: Deploy traefik.yml (static config)
+  ansible.builtin.template:
+    src: traefik.yml.j2
+    dest: "{{ traefik_dir }}/traefik.yml"
+    mode: "0644"
+  notify: Restart Traefik
+
+- name: Deploy dynamic configs
+  ansible.builtin.template:
+    src: "dynamic/{{ item }}.yml.j2"
+    dest: "{{ traefik_dir }}/dynamic/{{ item }}.yml"
+    mode: "0644"
+  loop:
+    - dashboard
+    - kanban
+    - techaxon
+  notify: Restart Traefik
+
+# =====================================================
+# Ensure ACME file exists safely (LET'S ENCRYPT SAFE)
+# =====================================================
+- name: Check if acme.json already exists
+  ansible.builtin.stat:
+    path: "{{ traefik_dir }}/letsencrypt/acme.json"
+  register: acme_file_stat
+
+- name: Create acme.json file only if it is missing
+  ansible.builtin.file:
+    path: "{{ traefik_dir }}/letsencrypt/acme.json"
+    state: touch
+    mode: "0600"
+  when: not acme_file_stat.stat.exists
+
+- name: Ensure correct permissions on existing acme.json
+  ansible.builtin.file:
+    path: "{{ traefik_dir }}/letsencrypt/acme.json"
+    state: file
+    mode: "0600"
+  when: acme_file_stat.stat.exists
+
+# =====================================================
+# Start Traefik (Idempotent safe deployment)
+# =====================================================
+- name: Ensure Traefik stack is running
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ traefik_dir }}"
+  register: compose_start
+  changed_when: "'Creating' in compose_start.stdout or 'Starting' in compose_start.stdout"

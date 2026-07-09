@@ -1,0 +1,23 @@
+http:
+  routers:
+    kanban:
+      rule: Host(`kanban.techaxon.de`)
+      entryPoints:
+        - websecure
+      service: kanban
+      middlewares:
+        - mylimit
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    kanban:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"
+
+  middlewares:
+    mylimit:
+      rateLimit:
+        average: 5
+        burst: 10
