@@ -1,0 +1,29 @@
+---
+- name: Check CouchDB cluster setup status
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/_cluster_setup"
+    method: GET
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+    status_code: 200
+  register: couchdb_cluster_setup_status
+
+
+- name: Finish CouchDB cluster setup
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/_cluster_setup"
+    method: POST
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      action: finish_cluster
+    status_code:
+      - 200
+      - 201
+      - 202
+  when:
+    - couchdb_cluster_setup_status.json.state is defined
+    - couchdb_cluster_setup_status.json.state not in ['cluster_finished']

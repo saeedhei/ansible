@@ -1,0 +1,27 @@
+---
+- name: Create CouchDB Mango indexes
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/{{ item.database }}/_index"
+    method: POST
+
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+
+    body_format: json
+
+    body:
+      index:
+        fields: "{{ item.fields }}"
+
+      name: "{{ item.name }}"
+      ddoc: "{{ item.ddoc }}"
+      type: "{{ item.type }}"
+
+    status_code:
+      - 200
+      - 201
+
+  loop: "{{ couchdb_indexes }}"
+  loop_control:
+    label: "{{ item.database }} -> {{ item.name }}"

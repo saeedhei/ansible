@@ -1,0 +1,48 @@
+---
+- name: Create CouchDB databases
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/{{ item }}"
+    method: PUT
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+
+    status_code:
+      - 201
+      - 202
+      - 412
+
+  loop: "{{ couchdb_databases }}"
+  loop_control:
+    label: "{{ item }}"
+
+
+- name: Configure CouchDB database security
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/{{ item }}/_security"
+    method: PUT
+
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+
+    body_format: json
+
+    body:
+      admins:
+        names:
+          - "{{ couchdb_admin_user }}"
+        roles: []
+
+      members:
+        names:
+          - "{{ couchdb_developer_user }}"
+        roles: []
+
+    status_code:
+      - 200
+      - 201
+
+  loop: "{{ couchdb_databases }}"
+  loop_control:
+    label: "{{ item }}"

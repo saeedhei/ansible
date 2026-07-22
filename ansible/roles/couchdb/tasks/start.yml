@@ -1,0 +1,8 @@
+---
+- name: Start CouchDB with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ couchdb_home }}"
+    state: present
+    pull: policy
+    recreate: auto
+    remove_orphans: true

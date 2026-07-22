@@ -10,8 +10,8 @@
     # - ufw
     # - fail2ban
     # - docker
-    - traefik
-    # - techaxon
+    # - traefik
+    - techaxon
 
 # ---
 # - name: Install and configure Nginx

@@ -1,0 +1,19 @@
+---
+- name: Create CouchDB directories
+  ansible.builtin.import_tasks: directories.yml
+
+
+- name: Deploy CouchDB docker compose
+  ansible.builtin.import_tasks: docker-compose.yml
+
+
+- name: Deploy CouchDB configuration
+  ansible.builtin.import_tasks: config.yml
+
+
+- name: Start CouchDB container
+  ansible.builtin.import_tasks: start.yml
+
+
+- name: Wait for CouchDB readiness
+  ansible.builtin.import_tasks: wait.yml

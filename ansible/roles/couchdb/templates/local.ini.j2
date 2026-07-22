@@ -1,0 +1,18 @@
+hostname = {{ couchdb_node_name }}
+
+[chttpd]
+bind_address = 0.0.0.0
+require_valid_user = true
+
+[httpd]
+bind_address = 0.0.0.0
+
+[cors]
+enable = true
+credentials = true
+methods = GET, PUT, POST, HEAD, DELETE
+origins = *
+
+[cluster]
+q = {{ couchdb_cluster_q }}
+n = {{ couchdb_cluster_n }}

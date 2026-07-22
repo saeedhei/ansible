@@ -1,0 +1,19 @@
+---
+- name: Prepare all CouchDB nodes
+  ansible.builtin.import_tasks: cluster/prepare.yml
+
+
+- name: Check CouchDB cluster membership
+  ansible.builtin.import_tasks: cluster/check_membership.yml
+
+
+- name: Add CouchDB nodes from bootstrap
+  ansible.builtin.import_tasks: cluster/add_nodes.yml
+
+
+- name: Finish CouchDB cluster
+  ansible.builtin.import_tasks: cluster/finish.yml
+
+
+- name: Verify CouchDB cluster
+  ansible.builtin.import_tasks: cluster/verify.yml

@@ -1,0 +1,17 @@
+---
+- name: Check current CouchDB cluster membership
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/_membership"
+    method: GET
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+    status_code: 200
+  register: couchdb_membership
+
+
+- name: Show current CouchDB cluster members
+  ansible.builtin.debug:
+    var: couchdb_membership.json
+  when:
+    - ansible_verbosity | int >= 1

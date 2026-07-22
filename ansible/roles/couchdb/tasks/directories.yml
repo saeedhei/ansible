@@ -1,0 +1,19 @@
+---
+- name: Create CouchDB directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ couchdb_home }}"
+    - "{{ couchdb_home }}/config"
+
+- name: Create CouchDB data directory
+  ansible.builtin.file:
+    path: "{{ couchdb_home }}/data"
+    state: directory
+    owner: "5984"
+    group: "5984"
+    mode: "0755"

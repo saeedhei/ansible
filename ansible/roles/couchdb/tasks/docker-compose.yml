@@ -1,0 +1,17 @@
+---
+- name: Ensure CouchDB project directory exists
+  ansible.builtin.file:
+    path: "{{ couchdb_home }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+
+- name: Deploy CouchDB docker compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ couchdb_home }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"

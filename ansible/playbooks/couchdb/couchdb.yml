@@ -1,0 +1,44 @@
+---
+- name: Deploy CouchDB nodes
+  hosts: couchdb_nodes
+  become: true
+
+  roles:
+    - role: couchdb
+
+
+- name: Configure CouchDB cluster
+  hosts: couchdb_bootstrap
+  become: true
+
+  tasks:
+    - name: Configure CouchDB cluster
+      ansible.builtin.import_role:
+        name: couchdb
+        tasks_from: cluster.yml
+
+
+- name: Bootstrap CouchDB resources
+  hosts: couchdb_bootstrap
+  become: true
+
+  tasks:
+    - name: Bootstrap CouchDB
+      ansible.builtin.import_role:
+        name: couchdb
+        tasks_from: bootstrap.yml
+
+
+# Fast syntax check only
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/couchdb/couchdb.yml --ask-become-pass --syntax-check
+
+# If syntax ok → try a dry run
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup_workers.yml --ask-become-pass --check --diff 
+
+# If everything looks good → real run
+# ansible-playbook -i /app/inventory/contabo.yml /app/playbooks/2_setup_workers.yml --ask-become-pass --ask-vault-pass --extra-vars "@/app/secrets/secrets.yml"
+
+# Debugging
+# ansible couchdb-node-0 -i /app/inventory/contabo.yml -m debug -a "var=ansible_host" 
+# ansible couchdb-node-0 -i /app/inventory/contabo.yml -m debug -a "var=couchdb_node_name" 
+# ansible k8s-worker-1 -i /app/inventory/contabo.yml -m debug -a "var=ansible_user"

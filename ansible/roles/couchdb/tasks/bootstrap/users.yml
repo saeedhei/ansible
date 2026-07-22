@@ -1,0 +1,37 @@
+---
+- name: Check if CouchDB developer user exists
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/_users/org.couchdb.user:{{ couchdb_developer_user }}"
+    method: GET
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+    status_code:
+      - 200
+      - 404
+  register: couchdb_developer_user_check
+
+
+- name: Create CouchDB developer user
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/_users/org.couchdb.user:{{ couchdb_developer_user }}"
+    method: PUT
+
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+
+    body_format: json
+
+    body:
+      name: "{{ couchdb_developer_user }}"
+      password: "{{ couchdb_developer_password }}"
+      roles: []
+      type: "user"
+
+    status_code:
+      - 201
+      - 202
+
+  when:
+    - couchdb_developer_user_check.status == 404

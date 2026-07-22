@@ -1,0 +1,27 @@
+---
+- name: Verify CouchDB cluster membership
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/_membership"
+    method: GET
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+    status_code: 200
+  register: couchdb_membership_check
+
+
+- name: Verify expected CouchDB nodes are present
+  ansible.builtin.assert:
+    that:
+      - item in couchdb_membership_check.json.all_nodes
+    fail_msg: "CouchDB node {{ item }} is missing from cluster"
+    success_msg: "CouchDB node {{ item }} is part of cluster"
+  loop: "{{ groups['couchdb_nodes'] | map('extract', hostvars, 'couchdb_node_name') | list }}"
+
+
+- name: Display CouchDB cluster members
+  ansible.builtin.debug:
+    msg:
+      cluster_nodes: "{{ couchdb_membership_check.json.all_nodes }}"
+  when:
+    - ansible_verbosity | int >= 1

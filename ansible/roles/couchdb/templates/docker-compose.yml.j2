@@ -1,0 +1,41 @@
+services:
+
+  {{ couchdb_service_name }}:
+    image: couchdb:{{ couchdb_version }}
+
+    container_name: {{ couchdb_container_name }}
+
+    restart: unless-stopped
+
+    ports:
+      - "{{ couchdb_http_port }}:5984"
+      - "{{ couchdb_cluster_port }}:5986"
+      - "{{ couchdb_erlang_port }}:4369"
+      - "{{ couchdb_epmd_range }}:9100-9200"
+
+    environment:
+      COUCHDB_USER: "{{ couchdb_admin_user }}"
+      COUCHDB_PASSWORD: "{{ couchdb_admin_password }}"
+
+      COUCHDB_SECRET: "{{ couchdb_secret }}"
+
+      NODENAME: "{{ couchdb_node_name }}"
+
+      ERL_FLAGS: "-setcookie {{ couchdb_cookie }}"
+
+    volumes:
+      - "{{ couchdb_home }}/data:/opt/couchdb/data"
+      - "{{ couchdb_home }}/config:/opt/couchdb/etc/local.d"
+
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://127.0.0.1:5984/_up
+
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+

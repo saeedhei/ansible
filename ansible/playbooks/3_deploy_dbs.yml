@@ -15,7 +15,7 @@
         state: absent
 
 - name: Deploy CouchDB on db servers
-  hosts: managers
+  hosts: db_managers
   become: true
   tasks:    
     - name: Create CouchDB data directories
@@ -69,10 +69,10 @@
       delay: 5
       until: couchdb_check is succeeded
 
-# workers
+# db_workers
 
 - name: Deploy CouchDB on db servers
-  hosts: workers
+  hosts: db_workers
   become: true
   tasks:        
     - name: Create CouchDB data directories
@@ -128,7 +128,7 @@
 
 
 - name: Deploy CouchDB Configuration
-  hosts: managers
+  hosts: db_managers
   become: true
   tasks:
     - name: Ensure CouchDB configuration directory exists
@@ -165,7 +165,7 @@
         docker-compose -f /docker-projects/docker-couchdb/docker-compose.yml restart couchdb-node0
 
 - name: Deploy CouchDB Configuration
-  hosts: workers
+  hosts: db_workers
   become: true
   tasks:
     - name: Ensure CouchDB configuration directory exists
@@ -198,7 +198,7 @@
         docker-compose -f /docker-projects/docker-couchdb/docker-compose.yml restart couchdb-node1
 
 - name: Add CouchDB Nodes to Cluster
-  hosts: manager
+  hosts: db-manager-1
   become: yes
   tasks:
     - name: Add each worker node to CouchDB cluster

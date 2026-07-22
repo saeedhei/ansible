@@ -1,0 +1,4 @@
+---
+- name: Restart CouchDB
+  ansible.builtin.command:
+    cmd: docker compose -f {{ couchdb_home }}/docker-compose.yml restart {{ couchdb_service_name }}

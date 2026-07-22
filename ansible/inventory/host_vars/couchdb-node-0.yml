@@ -1,0 +1,5 @@
+---
+couchdb_node_id: 0
+couchdb_node_name: couchdb@13.140.179.119
+couchdb_container_name: couchdb-node-0
+couchdb_service_name: couchdb

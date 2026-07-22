@@ -1,0 +1,6 @@
+---
+- import_tasks: bootstrap/users.yml
+
+- import_tasks: bootstrap/databases.yml
+
+- import_tasks: bootstrap/indexes.yml

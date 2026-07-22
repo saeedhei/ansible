@@ -1,0 +1,101 @@
+---
+# CouchDB version
+couchdb_version: "3.4.2"
+
+
+# Installation paths
+couchdb_home: "/opt/couchdb"
+
+
+# Docker
+couchdb_service_name: "couchdb"
+couchdb_container_name: "couchdb"
+
+
+# Network ports
+couchdb_http_port: 5984
+couchdb_cluster_port: 5986
+couchdb_erlang_port: 4369
+couchdb_epmd_range: "9100-9200"
+
+
+# CouchDB admin
+# بهتر است مقادیر واقعی در group_vars/vault باشند
+couchdb_admin_user: "admin"
+couchdb_admin_password: "CHANGE_ME"
+
+
+# CouchDB security
+couchdb_secret: "CHANGE_ME_SECRET"
+couchdb_cookie: "CHANGE_ME_COOKIE"
+
+
+# Cluster
+couchdb_enable_cluster: true
+
+couchdb_cluster_q: 2
+couchdb_cluster_n: 2
+
+
+# Bootstrap
+couchdb_enable_bootstrap: true
+
+
+# Databases
+couchdb_databases:
+  - idp_core
+  - kanban
+  - lms
+
+
+# Developer user (non admin)
+couchdb_developer_user: "developer"
+couchdb_developer_password: "CHANGE_ME"
+
+
+# Mango indexes
+couchdb_indexes:
+
+  # IAM
+  - database: idp_core
+    name: users_by_email
+    ddoc: users
+    type: json
+    fields:
+      - email
+
+  - database: idp_core
+    name: sessions_by_user
+    ddoc: sessions
+    type: json
+    fields:
+      - userId
+      - type
+
+  - database: idp_core
+    name: tokens_by_hash
+    ddoc: tokens
+    type: json
+    fields:
+      - tokenHash
+      - type
+
+
+  # Kanban
+  - database: kanban
+    name: tasks_by_board
+    ddoc: tasks
+    type: json
+    fields:
+      - boardId
+      - type
+
+
+  # LMS
+  - database: lms
+    name: courses_by_owner
+    ddoc: courses
+    type: json
+    fields:
+      - ownerId
+      - type

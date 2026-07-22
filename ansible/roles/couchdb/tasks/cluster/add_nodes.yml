@@ -1,0 +1,44 @@
+---
+- name: Add missing CouchDB nodes to cluster
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ couchdb_http_port }}/_cluster_setup"
+    method: POST
+
+    user: "{{ couchdb_admin_user }}"
+    password: "{{ couchdb_admin_password }}"
+    force_basic_auth: true
+
+    body_format: json
+
+    body:
+      action: add_node
+      host: "{{ hostvars[item].ansible_host }}"
+      port: "{{ couchdb_http_port }}"
+      username: "{{ couchdb_admin_user }}"
+      password: "{{ couchdb_admin_password }}"
+
+    status_code:
+      - 200
+      - 201
+      - 202
+
+  loop: "{{ groups['couchdb_nodes'] }}"
+
+  loop_control:
+    label: "{{ item }}"
+
+  when:
+    - item != inventory_hostname
+    - "'couchdb@' ~ hostvars[item].ansible_host not in couchdb_membership.json.all_nodes"
+
+  register: add_node_result
+
+
+- name: Display added CouchDB nodes
+  ansible.builtin.debug:
+    msg:
+      node: "{{ item.item }}"
+      response: "{{ item.json | default({}) }}"
+  loop: "{{ add_node_result.results }}"
+  when:
+    - ansible_verbosity | int >= 1
